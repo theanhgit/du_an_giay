@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="" />
+  <meta name="author" content="" />
+  <title>Shop Homepage - Start Bootstrap Template</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+  <style>
+    .checkbox-container {
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      background-color: #f9f9f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .checkbox-container .row {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .checkbox-container .col-4 {
+      flex: 0 0 32%;
+      max-width: 32%;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: center;
+    }
+    .checkbox-container .form-check {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+<div th:replace="~{web/common/header.html}"></div>
+
+<div class="container px-4 px-lg-5 mt-5 checkbox-container">
+  <div class="row">
+    <div class="col-4">
+      <div class="form-check">
+        <input class="form-check-input checkbox" type="checkbox" value="chạy marathon" id="checkbox1">
+        <label class="form-check-label" for="checkbox1">chạy marathon</label>
+      </div>
+    </div>
+    <div class="col-4">
+      <div class="form-check">
+        <input class="form-check-input checkbox" type="checkbox" value="thể thao phong cách" id="checkbox2">
+        <label class="form-check-label" for="checkbox2">thể thao phong cách</label>
+      </div>
+    </div>
+    <div class="col-4">
+      <div class="form-check">
+        <input class="form-check-input checkbox" type="checkbox" value="chạy nhẹ nhàng" id="checkbox3">
+        <label class="form-check-label" for="checkbox3">chạy nhẹ nhàng</label>
+      </div>
+    </div>
+    <div class="col-4">
+      <div class="form-check">
+        <input class="form-check-input checkbox" type="checkbox" value="thể thao siêu nhẹ" id="checkbox4">
+        <label class="form-check-label" for="checkbox4">thể thao siêu nhẹ</label>
+      </div>
+    </div>
+    <div class="col-4">
+      <div class="form-check">
+        <input class="form-check-input checkbox" type="checkbox" value="thể thao chống trượt" id="checkbox5">
+        <label class="form-check-label" for="checkbox5">thể thao chống trượt</label>
+      </div>
+    </div>
+    <div class="col-4">
+      <div class="form-check">
+        <input class="form-check-input checkbox" type="checkbox" value="thể thao đi hàng ngày" id="checkbox6">
+        <label class="form-check-label" for="checkbox6">thể thao đi hàng ngày</label>
+      </div>
+    </div>
+    <div class="col-4">
+      <div class="form-check">
+        <input class="form-check-input checkbox" type="checkbox" value="chạy đua cao cấp" id="checkbox7">
+        <label class="form-check-label" for="checkbox7">chạy đua cao cấp</label>
+      </div>
+    </div>
+    <div class="col-4">
+      <div class="form-check">
+        <input class="form-check-input checkbox" type="checkbox" value="đi bộ thoải mái" id="checkbox8">
+        <label class="form-check-label" for="checkbox8">đi bộ thoải mái</label>
+      </div>
+    </div>
+    <div class="col-4">
+      <div class="form-check">
+        <input class="form-check-input checkbox" type="checkbox" value="chạy bộ chất lượng cao" id="checkbox9">
+        <label class="form-check-label" for="checkbox9">chạy bộ chất lượng cao</label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="py-5">
+  <div class="container px-4 px-lg-5 mt-5">
+    <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
+      <!-- Sản phẩm sẽ được thêm vào đây bởi AJAX -->
+    </div>
+  </div>
+  <nav aria-label="Page navigation example">
+    <ul class="pagination justify-content-center">
+      <!-- Các liên kết phân trang sẽ được thêm vào đây -->
+    </ul>
+  </nav>
+</section>
+
+<div th:replace="~{web/common/foodter.html}"></div>
+
+<!-- Import Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Import favicon -->
+<link rel="icon" th:href="@{/dist/assets/favicon.ico}" />
+
+<script>
+  let currentPage = 1;
+  let pageSize = 8;
+  let keySearch = "";
+
+  function fetchProducts(pageNo) {
+    let url2 = `/api/SPCT?pageNo=${pageNo}&pageSize=${pageSize}`;
+    if (keySearch) {
+      url2 += `&moTa=${keySearch}`;
+    }
+    $.ajax({
+      url: url2,
+      method: 'GET',
+      dataType: 'json',
+      success: function (response) {
+        console.log('Data received from API:', response); // Kiểm tra dữ liệu nhận được
+        var container = $('.row-cols-2.row-cols-md-3.row-cols-xl-4.justify-content-center');
+        container.empty(); // Xóa nội dung cũ
+
+        // Lấy mảng sản phẩm từ dữ liệu nhận được
+        var products = response.content;
+
+        // Kiểm tra nếu products là một mảng
+        if (Array.isArray(products)) {
+          products.forEach(function (product) { // Sửa tên biến thành product
+            var productId = product.id; // Lấy id của sản phẩm
+            var productHtml = `
+                        <div class="col mb-5">
+                            <div class="card h-100">
+                                <!-- Product image-->
+                                <img class="card-img-top" src="${product.hinhAnh.duongDan}" alt="...">
+                                <!-- Product details-->
+                                <div class="card-body p-4">
+                                    <div class="text-center">
+                                        <!-- Product name-->
+                                        <h5 class="fw-bolder">${product.sanPham.tenSanPham}</h5>
+                                        <!-- Product price-->
+                                        ${product.giaSanPham.toLocaleString('vi-VN', {
+              style: 'currency',
+              currency: 'VND'
+            })}
+                                    </div>
+                                </div>
+                                <!-- Product actions-->
+                                <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                                    <div class="text-center">
+                                        ${product.soLuong > 0 && product.trangThai !== 0 ? `<a class="btn btn-outline-dark mt-auto view-options" href="#" data-product-id="${productId}">View options</a>` :
+                    `<span class="btn btn-outline-dark mt-auto text-danger">${product.trangThai === 0 ? 'Dừng bán' : 'Hết hàng'}</span>`}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+            container.append(productHtml);
+          });
+
+          // Cập nhật liên kết phân trang
+          updatePagination(response);
+        } else {
+          console.error('Expected an array but got:', products);
+          container.append('<p class="text-danger">Error: Expected an array but got invalid data format.</p>');
+        }
+      },
+      error: function (err) {
+        console.error('Error fetching products:', err);
+        var container = $('.row-cols-2.row-cols-md-3.row-cols-xl-4.justify-content-center');
+        container.empty(); // Xóa nội dung cũ
+        container.append('<p class="text-danger">Error fetching products. Please try again later.</p>');
+      }
+    });
+  }
+
+
+  function searchProduct() {
+    console.log('Quang');
+    keySearch = $("#keySearch").val();
+    currentPage = 1;
+    fetchProducts(currentPage - 1);
+  }
+
+  function updatePagination(response) {
+    var paginationContainer = $('.pagination');
+    paginationContainer.empty(); // Xóa nội dung cũ
+
+    var totalPages = response.totalPages;
+    var currentPage = response.pageable.pageNumber + 1; // Cập nhật số trang hiện tại
+
+    for (var i = 1; i <= totalPages; i++) {
+      var activeClass = (i === currentPage) ? 'active' : '';
+      var pageItem = `
+        <li class="page-item ${activeClass}">
+          <a class="page-link" href="#" data-page="${i}">${i}</a>
+        </li>
+      `;
+      paginationContainer.append(pageItem);
+    }
+  }
+
+  $(document).ready(function () {
+    fetchProducts(currentPage - 1);
+
+    // Bắt sự kiện click vào liên kết phân trang
+    $(document).on('click', '.pagination .page-link', function (e) {
+      e.preventDefault(); // Ngăn chặn hành vi mặc định của thẻ <a>
+
+      var pageNo = $(this).data('page'); // Lấy số trang từ thuộc tính data
+      fetchProducts(pageNo - 1); // Tải lại sản phẩm với trang mới
+    });
+
+    // Bắt sự kiện click vào liên kết View options
+    $(document).on('click', '.view-options', function (e) {
+      e.preventDefault(); // Ngăn chặn hành vi mặc định của thẻ <a>
+
+      var productId = $(this).data('product-id'); // Lấy id từ thuộc tính data
+
+      // Chuyển hướng đến trang chi tiết sản phẩm
+      window.location.href = '/DetailSP/' + productId;
+    });
+
+    // Bắt sự kiện thay đổi của checkbox
+    $(document).on('change', '.checkbox', function () {
+      // Cập nhật keySearch với giá trị của checkbox được chọn
+      keySearch = $(this).val();
+      // Bỏ chọn các checkbox khác
+      $('.checkbox').not(this).prop('checked', false);
+      // Thực hiện tìm kiếm
+      fetchProducts(0); // Tải lại sản phẩm với trang đầu tiên
+    });
+  });
+</script>
+</body>
+</html>

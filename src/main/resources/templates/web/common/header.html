@@ -1,0 +1,113 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Detail</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css">
+  <style>
+    .btn-group {
+      display: flex;
+      gap: 10px; /* Khoảng cách giữa các nút */
+    }
+    .btn-group button {
+      flex: 1; /* Kích thước bằng nhau */
+    }
+    header {
+      padding: 2rem 0; /* Điều chỉnh padding cho phần header */
+    }
+    header .carousel-item img {
+      width: 100%;
+      height: auto; /* Đảm bảo hình ảnh co lại theo tỷ lệ */
+      max-height: 250px; /* Giới hạn chiều cao tối đa của hình ảnh */
+    }
+  </style>
+</head>
+<body>
+<!-- Navigation-->
+<nav class="navbar navbar-expand-lg navbar-light bg-warning">
+  <div class="container px-4 px-lg-5">
+    <a class="navbar-brand" href="#!">Start Bootstrap</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+        <li class="nav-item"><a class="nav-link active" aria-current="page" th:href="@{/trang-chu}">Trang Chủ |</a></li>
+        <li class="nav-item"><a class="nav-link active" aria-current="page" th:href="@{/dang-ki}">Đăng Kí |</a></li>
+        <li class="nav-item"><a class="nav-link active" aria-current="page" th:href="@{/dang-nhap}">Đăng Nhập |</a></li>
+        <li class="nav-item" th:if="${session.user != null}"><a class="nav-link active" aria-current="page" th:href="@{/logout}">Thoát |</a></li>
+        <li class="nav-item"><a class="nav-link" th:text="${session.user != null ? 'Hello: ' + session.user.ten : 'User'}"></a></li>
+      </ul>
+      <div class="d-flex">
+        <div class="btn-group ms-2">
+          <form th:if="${session.user != null}" th:action="@{/cart/{idUser}(idUser=${session.user.id})}" method="get">
+            <button class="btn btn-outline-dark" type="submit">
+              <i class="bi bi-cart-fill me-1"></i>
+              Cart
+              <span class="badge bg-dark text-white ms-1 rounded-pill">0</span>
+            </button>
+          </form>
+          <form th:if="${session.user == null}" th:action="@{/dang-nhap}" method="get">
+            <button class="btn btn-outline-dark" type="submit">
+              <i class="bi bi-cart-fill me-1"></i>
+              Cart
+            </button>
+          </form>
+          <form th:if="${session.user == null}" th:action="@{/dang-nhap}" method="get">
+            <button class="btn btn-outline-dark" type="submit">
+              <i class="bi bi-receipt me-1"></i>
+              Bill
+            </button>
+          </form>
+          <form th:if="${session.user != null}" th:action="@{/hoa-don}" method="get">
+            <button class="btn btn-outline-dark" type="submit">
+              <i class="bi bi-receipt me-1"></i>
+              Bill
+            </button>
+          </form>
+
+          <div class="d-flex">
+            <input class="form-control" type="search" placeholder="Tìm kiếm" aria-label="Search" id="keySearch">
+            <button class="btn btn-outline-dark" onclick="searchProduct()"><i class="bi bi-search"></i></button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Header-->
+<header class="bg-dark py-4">
+  <div class="container px-3 px-lg-4 my-4">
+    <div class="text-center text-white">
+      <div id="myCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
+        <div class="carousel-inner">
+          <div class="carousel-item active">
+            <div class="container px-4 px-lg-5 my-5">
+              <div class="text-center text-white">
+                <img class="card-img-top img-fluid" src="http://localhost:8080/img2/baner1.png" alt="..." />
+                <p class="lead fw-normal text-white-50 mb-0">With this shop homepage template</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="carousel-item">
+            <div class="container px-4 px-lg-5 my-5">
+              <div class="text-center text-white">
+                <img class="card-img-top img-fluid" src="http://localhost:8080/img2/banner2.jpg" alt="..." />
+                <p class="lead fw-normal text-white-50 mb-0">With this shop homepage template</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<!--<script th:src ="@{/dist/importCss/Web.js}"></script>-->
+
+</body>
+</html>

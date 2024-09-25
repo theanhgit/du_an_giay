@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/latest/jquery.validate.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <th:block th:replace="~{cssImport.html :: layout_import_css}"/>
+
+
+</head>
+<body class="no-skin">
+<!-- header -->
+<!-- Thay thế các đoạn mã này bằng thymeleaf block -->
+<div th:replace="admin/common/Header.html"></div>
+<!-- header -->
+
+
+<div class="main-container" id="main-container">
+    <script type="text/javascript">
+        try {
+            ace.settings.check('main-container', 'fixed')
+        } catch (e) {
+        }
+    </script>
+    <!-- header -->
+    <!-- Thay thế các đoạn mã này bằng thymeleaf block -->
+    <div th:replace="admin/common/menu.html"></div>
+    <!-- header -->
+    <div class="main-content">
+        <div class="main-content-inner">
+            <div class="page-content">
+                <form id="update-product">
+                            <input type="hidden" class="form-control" id="id-update" name="id-update">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label >name sanPhamCT</label>
+                            <input type="text" class="form-control" id="update-name-product" name="update-name-product">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label >price sanPhamCT</label>
+                            <input type="text" class="form-control" id="update-price-product" name="update-price-product">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label >Quantity</label>
+                            <input type="number" class="form-control" id="update-quantity" name="update-quantity">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label >Color</label>
+                            <input type="text" class="form-control" id="update-Color" name="update-Color" >
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label >Status</label>
+                            <input type="text" class="form-control" id="update-Status" name="update-Status">
+                        </div>
+
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="category-id">Category</label>
+                            <input type="text" class="form-control" id="category-id" name="category-id" readonly>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="btn-update">Submit</button>
+
+                </form>
+
+
+
+                <!-- Thay thế các đoạn mã này bằng thymeleaf block -->
+                <div th:replace="admin/common/foodter.html"></div>
+                <!-- footer -->
+
+                <a href="#" id="btn-scroll-up" class="btn-scroll-up btn btn-sm btn-inverse display">
+                    <i class="ace-icon fa fa-angle-double-up icon-only bigger-110"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script th:src="@{/dist/addjs/DeltailSP.js}" defer></script>
+
+
+</html>

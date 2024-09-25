@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Information</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <style>
+        .container {
+            margin-top: 50px;
+            max-width: 600px;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .result h3 {
+            margin-bottom: 20px;
+        }
+        .back-button {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 class="text-center">Hóa Đơn Thanh Toán</h1>
+    <div class="result">
+        <h3 class="text-center">Online</h3>
+        <p><strong>Transaction ID:</strong> <span id="result-txnRef"></span></p>
+        <p><strong>Số Tiền:</strong> <span id="result-amount"></span></p>
+        <p><strong>Ngân Hàng Thanh Toán:</strong> <span id="result-bankCode"></span></p>
+        <p><strong>Mã Hóa Đơn:</strong> <span id="result-orderInfo"></span></p>
+        <p><strong>Tên Khách Hàng:</strong> <span id="result-customerName"></span></p>
+    </div>
+    <input type="hidden" class="form-control" id="nameKhach" name="nameKhach"
+           th:value="${session.user.ho + ' ' + session.user.tenDem + ' ' + session.user.ten}"/>
+    <div class="back-button">
+        <a href="/trang-chu" class="btn btn-secondary">Trở về Trang Chủ</a>
+    </div>
+</div>
+<script>
+    $(document).ready(function() {
+        var customerName = $('#nameKhach').val();
+
+        // Function to get URL parameter
+        function getUrlParameter(sParam) {
+            var sPageURL = window.location.search.substring(1),
+                sURLVariables = sPageURL.split('&'),
+                sParameterName,
+                i;
+
+            for (i = 0; i < sURLVariables.length; i++) {
+                sParameterName = sURLVariables[i].split('=');
+
+                if (sParameterName[0] === sParam) {
+                    return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1].replace(/\+/g, ' '));
+                }
+            }
+            return false;
+        }
+
+        var txnRef = getUrlParameter('vnp_TxnRef');
+        var amount = getUrlParameter('vnp_Amount');
+        var bankCode = getUrlParameter('vnp_BankCode');
+        var orderInfo = getUrlParameter('vnp_OrderInfo');
+        var responseCode = getUrlParameter('vnp_ResponseCode');
+
+        $.ajax({
+            url: '/api/vnp/payment-infor',
+            type: 'GET',
+            data: {
+                vnp_TxnRef: txnRef,
+                vnp_Amount: amount,
+                vnp_BankCode: bankCode,
+                vnp_OrderInfo: orderInfo,
+                vnp_ResponseCode: responseCode,
+                customerName: customerName
+            },
+            success: function(data) {
+                $('#result-txnRef').text(data.txnRef);
+                $('#result-amount').text((data.amount / 100).toLocaleString());
+                $('#result-bankCode').text(data.bankCode);
+                $('#result-orderInfo').text(data.orderInfo);
+                $('#result-customerName').text(data.customerName); // Display customer name
+            },
+            error: function(error) {
+                console.log(error);
+            }
+        });
+    });
+</script>
+</body>
+</html>

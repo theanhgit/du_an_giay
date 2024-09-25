@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/latest/jquery.validate.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <th:block th:replace="~{cssImport.html :: layout_import_css}"/>
+</head>
+
+<body>
+<div th:replace="admin/common/Header.html"></div>
+<div class="container mt-4">
+    <form th:action="@{/diachi/add}" th:object="${diaChi}" method="post">
+        <div class="form-row">
+            <div class="form-group col-md-2">
+                <label for="ma">Mã</label>
+                <input type="text" class="form-control" id="ma" th:field="*{ma}" placeholder="Ma" required>
+            </div>
+            <div class="form-group col-md-2">
+                <label for="diaChi">Địa Chỉ</label>
+                <input type="text" class="form-control" id="diaChi" th:field="*{diaChi}" placeholder="Địa Chỉ" required>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="thanhPho">Thành Phố</label>
+                <input type="text" class="form-control" id="thanhPho" th:field="*{thanhPho}" placeholder="Thành Phố">
+            </div>
+            <div class="form-group col-md-2">
+                <label for="quocGia">Quốc Gia</label>
+                <input type="text" class="form-control" id="quocGia" th:field="*{quocGia}" placeholder="Quốc Gia" required>
+            </div>
+            <div class="form-group col-md-2">
+                <label for="quocGia">Trạng Thái</label>
+                <input type="number" class="form-control" id="trangThai" th:field="*{trangThai}" placeholder="Quốc Gia" required>
+            </div>
+            <div class="form-group col-md-2 align-self-end">
+                <button type="submit" class="btn btn-success" id="btnAdd">Add</button>
+            </div>
+        </div>
+    </form>
+    <table class="table table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>Mã</th>
+            <th>Địa Chỉ</th>
+            <th>Thành Phố</th>
+            <th>Quốc gia</th>
+            <th>Ngày Tạo</th>
+            <th>Ngày Sửa</th>
+            <th>Trạng Thái</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="diaChi : ${diaChiList}">
+            <td th:text="${diaChi.ma}"></td>
+            <td th:text="${diaChi.diaChi}"></td>
+            <td th:text="${diaChi.thanhPho}"></td>
+            <td th:text="${diaChi.quocGia}"></td>
+            <td th:text="${diaChi.createDate}"></td>
+            <td th:text="${diaChi.updateDate}"></td>
+            <td th:text="${diaChi.trangThai}"></td>
+            <td>
+                <a th:href="@{/diachi/detail/{id}(id=${diaChi.id})}" class="btn btn-primary">Detail</a>
+                                <form th:action="@{/diachi/delete/{id}(id=${diaChi.id})}" method="post">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<div th:replace="admin/common/foodter.html"></div>
+</body>
+</html>

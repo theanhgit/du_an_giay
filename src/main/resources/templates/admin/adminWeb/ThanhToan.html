@@ -1,0 +1,741 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="en" xmlns:th="http://www.thymeleaf.org">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>Checkout Form</title>-->
+<!--    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"-->
+<!--          integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">-->
+<!--    <style>-->
+<!--        body {-->
+<!--            padding: 20px;-->
+<!--        }-->
+
+<!--        .invoice-heading {-->
+<!--            background-color: #f5f5f5;-->
+<!--            padding: 10px;-->
+<!--            margin-bottom: 20px;-->
+<!--        }-->
+
+<!--        .invoice-details {-->
+<!--            margin-bottom: 20px;-->
+<!--        }-->
+
+<!--        .table {-->
+<!--            margin-bottom: 20px;-->
+<!--        }-->
+
+<!--        .btn-submit {-->
+<!--            margin-top: 20px;-->
+<!--        }-->
+
+<!--        .error-message {-->
+<!--            color: red;-->
+<!--            margin-top: 10px;-->
+<!--        }-->
+
+<!--        .success-message {-->
+<!--            color: green;-->
+<!--            margin-top: 10px;-->
+<!--        }-->
+
+<!--        .form-group {-->
+<!--            margin-bottom: 20px;-->
+<!--        }-->
+
+<!--        .radio-label {-->
+<!--            font-weight: bold;-->
+<!--        }-->
+
+<!--        .money-payment {-->
+<!--            display: none;-->
+<!--        }-->
+
+<!--        .money-return-red {-->
+<!--            color: red;-->
+<!--        }-->
+
+<!--        #qrCodeContainer {-->
+<!--            display: none;-->
+<!--        }-->
+
+<!--        .form-control.error input {-->
+<!--            border-color: red;-->
+<!--        }-->
+
+<!--        .form-control.success input {-->
+<!--            border-color: green;-->
+<!--        }-->
+<!--    </style>-->
+<!--    <th:block th:replace="~{cssImport.html :: layout_import_css}"/>-->
+<!--</head>-->
+<!--<body>-->
+<!--<div th:replace="~{admin/common/Header.html}"></div>-->
+<!--<div th:replace="~{admin/common/menu.html}"></div>-->
+<!--<div class="content-wrapper">-->
+<!--    <section class="content">-->
+<!--        <div class="main-content">-->
+<!--            <div class="main-content-inner">-->
+<!--                <div class="container">-->
+<!--                    <div class="row">-->
+<!--                        <div class="col-md-12">-->
+<!--                            <div class="invoice-heading">-->
+<!--                                <h2>Thông tin hóa đơn</h2>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                    <div class="row">-->
+<!--                        <div class="col-md-6">-->
+<!--                            &lt;!&ndash; Display HoaDonEntity details &ndash;&gt;-->
+<!--                            <div class="invoice-details">-->
+<!--                                <p><strong>Hóa đơn ID:</strong> <span id="hoaDonIdSpan" th:text="${hoaDon.id}"></span>-->
+<!--                                </p>-->
+<!--                                <p><strong>Ngày Tạo:</strong> <span th:text="${hoaDon.createDate}"></span></p>-->
+<!--                            </div>-->
+<!--                            <form th:action="@{'/payment/'+ ${hoaDon.id}}" method="post" id="checkoutForm">-->
+<!--                                <input type="hidden" name="hoaDonId" th:value="${hoaDon.id}"/>-->
+<!--                                <div class="form-group">-->
+<!--                                    <label for="tenKhachHang"><strong>Tên khách hàng:</strong></label>-->
+<!--                                    <input type="text" class="form-control" id="tenKhachHang" name="tenKhachHang"-->
+<!--                                           th:value="${hoaDon.user != null ? hoaDon.user.ten : ''}"-->
+<!--                                           placeholder="Tên khách hàng"/>-->
+<!--                                    <small class="error-message"></small>-->
+<!--                                </div>-->
+<!--                                <div class="form-group">-->
+<!--                                    <label for="sdt"><strong>Số điện thoại:</strong></label>-->
+<!--                                    <input type="text" class="form-control" id="sdt" name="sdt"-->
+<!--                                           th:value="${hoaDon.user != null ? hoaDon.user.sdt : ''}"-->
+<!--                                           placeholder="Số điện thoại"/>-->
+<!--                                    <small class="error-message"></small>-->
+<!--                                </div>-->
+<!--                                &lt;!&ndash; Chi tiết sản phẩm &ndash;&gt;-->
+<!--                                <div class="table-responsive">-->
+<!--                                    <table class="table table-bordered">-->
+<!--                                        <thead>-->
+<!--                                        <tr>-->
+<!--                                            <th>Tên sản phẩm</th>-->
+<!--                                            <th>Số lượng</th>-->
+<!--                                            <th>Đơn Giá</th>-->
+<!--                                            <th>Thành tiền</th>-->
+<!--                                        </tr>-->
+<!--                                        </thead>-->
+<!--                                        <tbody>-->
+<!--                                        &lt;!&ndash; Loop through each product detail &ndash;&gt;-->
+<!--                                        <tr th:each="chiTiet : ${hoaDon.hoaDonChiTiets}">-->
+<!--                                            <td th:text="${chiTiet.sanPhamChiTiet.sanPham.tenSanPham}+'  '+${chiTiet.sanPhamChiTiet.mauSac.ten}+'  ' +${chiTiet.sanPhamChiTiet.kichCo.tenKichCo}"></td>-->
+<!--                                            <td th:text="${chiTiet.soLuong}"></td>-->
+<!--                                            <td th:text="${chiTiet.sanPhamChiTiet.getGiaSanPham()}"></td>-->
+<!--                                            <td th:text="${chiTiet.thanhTien}"></td>-->
+<!--                                        </tr>-->
+<!--                                        </tbody>-->
+<!--                                    </table>-->
+<!--                                </div>-->
+<!--                                <p><strong>Tổng tiền:</strong> <span id="tongTienSpan"-->
+<!--                                                                     th:text="${hoaDon.tongTien}"></span></p>-->
+<!--                                <div class="form-group">-->
+<!--                                    <label class="radio-label"><strong>Phương thức thanh toán:</strong></label><br/>-->
+<!--                                    <div class="form-check form-check-inline">-->
+<!--                                        <input class="form-check-input" type="radio" name="paymentMethod"-->
+<!--                                               id="paymentMethod1" value="tienMat" required/>-->
+<!--                                        <label class="form-check-label" for="paymentMethod1">Tiền mặt</label>-->
+<!--                                    </div>-->
+<!--                                    <div class="form-check form-check-inline">-->
+<!--                                        <input class="form-check-input" type="radio" name="paymentMethod"-->
+<!--                                               id="paymentMethod2" value="chuyenKhoan"/>-->
+<!--                                        <label class="form-check-label" for="paymentMethod2">Chuyển khoản</label>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                                <div class="form-group money-payment" id="moneyPayment">-->
+<!--                                    <label for="tienKhachDua"><strong>Tiền khách đưa:</strong></label>-->
+<!--                                    <input type="text" class="form-control" id="tienKhachDua" name="tienKhachDua"-->
+<!--                                           min="0" step="1000">-->
+<!--                                    <small id="moneyReturnHelp" class="form-text text-muted"></small>-->
+<!--                                </div>-->
+<!--                                <div class="form-group" id="qrCodeContainer">-->
+<!--                                    <label for="qrCode"><strong>Mã QR Chuyển khoản:</strong></label>-->
+<!--                                    <div id="qrCode"></div>-->
+<!--                                    <button type="button" class="btn btn-secondary" id="generateQrCodeBtn">Tạo Mã QR-->
+<!--                                    </button>-->
+<!--                                </div>-->
+<!--                                <button type="submit" class="btn btn-primary btn-submit" disabled>Thanh toán</button>-->
+<!--                            </form>-->
+<!--                            &lt;!&ndash; Error and success messages &ndash;&gt;-->
+<!--                            <div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>-->
+<!--                            <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                &lt;!&ndash; Bootstrap JS and dependencies (for optional features) &ndash;&gt;-->
+<!--                <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>-->
+<!--                <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"-->
+<!--                        integrity="sha384-p3Fm+zQAA/mTz8Dq+1GGbB0rYH2zzE3k6fVLYMQFJpEJ9MvDzo8zXNa69daTlY3Z"-->
+<!--                        crossorigin="anonymous"></script>-->
+<!--                <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"-->
+<!--                        integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8sh+EWlE/hb3EhsR/pAITtcQj6eGwYXpG2QNIq"-->
+<!--                        crossorigin="anonymous"></script>-->
+<!--                <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>-->
+
+<!--                <script>-->
+<!--                    let isQrGenerated = false;-->
+<!--                    $(document).ready(function () {-->
+<!--                        let isQrGenerated = false;-->
+<!--                        var tongTien = parseInt($('#tongTienSpan').text());-->
+<!--                        var hoaDonId = $('#hoaDonIdSpan').text().trim();-->
+
+<!--                        console.log(hoaDonId + "    :a")-->
+
+<!--                        function updateMoneyReturn() {-->
+<!--                            var tienKhachDuaStr = $('#tienKhachDua').val().replace(/\./g, '');-->
+<!--                            var tienKhachDua = parseInt(tienKhachDuaStr);-->
+<!--                            var moneyReturnHelp = $('#moneyReturnHelp');-->
+<!--                            var submitButton = $('.btn-submit');-->
+<!--                            if (!isNaN(tienKhachDua)) {-->
+<!--                                var tienTraLai = tienKhachDua - tongTien;-->
+<!--                                if (tienTraLai >= 0) {-->
+<!--                                    moneyReturnHelp.text('Tiền trả lại: ' + tienTraLai.toLocaleString('vi-VN') + ' VND');-->
+<!--                                    moneyReturnHelp.removeClass('money-return-red');-->
+<!--                                    submitButton.removeAttr('disabled'); // Kích hoạt nút thanh toán khi tiền đủ-->
+<!--                                } else {-->
+<!--                                    moneyReturnHelp.text('Khách chưa đưa đủ tiền.');-->
+<!--                                    moneyReturnHelp.addClass('money-return-red');-->
+<!--                                    submitButton.attr('disabled', true); // Vô hiệu hóa nút thanh toán khi tiền không đủ-->
+<!--                                }-->
+<!--                            } else {-->
+<!--                                moneyReturnHelp.text('');-->
+<!--                                submitButton.attr('disabled', true); // Vô hiệu hóa nút thanh toán nếu không có giá trị nhập-->
+<!--                            }-->
+<!--                        }-->
+
+<!--                        $('#tienKhachDua').on('input', function () {-->
+<!--                            updateMoneyReturn();-->
+<!--                        });-->
+<!--                        $('#tienKhachDua').on('blur', function () {-->
+<!--                            var tienKhachDuaStr = $(this).val().replace(/\./g, '');-->
+<!--                            var tienKhachDua = parseInt(tienKhachDuaStr);-->
+<!--                            if (!isNaN(tienKhachDua)) {-->
+<!--                                $(this).val(tienKhachDua.toLocaleString('vi-VN'));-->
+<!--                            }-->
+<!--                        });-->
+<!--                        $('input[name="paymentMethod"]').on('change', function () {-->
+<!--                            var selectedMethod = $('input[name="paymentMethod"]:checked').val();-->
+<!--                            if (selectedMethod === 'tienMat') {-->
+<!--                                $('#moneyPayment').show();-->
+<!--                                $('#tienKhachDua').attr('required', true);-->
+<!--                                $('#qrCodeContainer').hide();-->
+<!--                                isQrGenerated = true; // No QR code needed for cash payment-->
+<!--                                $('.btn-submit').removeAttr('disabled');-->
+<!--                            } else if (selectedMethod === 'chuyenKhoan') {-->
+<!--                                $('#moneyPayment').hide();-->
+<!--                                $('#tienKhachDua').removeAttr('required');-->
+<!--                                $('#qrCodeContainer').show();-->
+<!--                                isQrGenerated = false; // Require QR code generation for bank transfer-->
+<!--                                $('.btn-submit').attr('disabled', true);-->
+<!--                            }-->
+<!--                        });-->
+
+<!--                        $('#generateQrCodeBtn').click(function () {-->
+<!--                            var paymentMethod = $('input[name="paymentMethod"]:checked').val();-->
+<!--                            if (paymentMethod === 'chuyenKhoan') {-->
+<!--                                var requestData = {-->
+<!--                                    "accountNo": "9159678903",-->
+<!--                                    "accountName": "NGUYEN THE ANH",-->
+<!--                                    "acqId": 970407,-->
+<!--                                    "amount": tongTien.toFixed(0),-->
+<!--                                    "addInfo": "Thanh toan " + hoaDonId,-->
+<!--                                    "template": "compact"-->
+<!--                                };-->
+<!--                                console.log("addInfo: " + requestData.addInfo);-->
+<!--                                $.ajax({-->
+<!--                                    url: 'https://api.vietqr.io/v2/generate',-->
+<!--                                    type: 'POST',-->
+<!--                                    headers: {-->
+<!--                                        'x-client-id': 'b7ae6fa4-bc11-40be-aca1-98f275a8c493',-->
+<!--                                        'x-api-key': '4e8bebfb-9073-4686-bbaa-d71bcc5dc0ec',-->
+<!--                                        'Content-Type': 'application/json'-->
+<!--                                    },-->
+<!--                                    data: JSON.stringify(requestData),-->
+<!--                                    success: function (response) {-->
+<!--                                        if (response && response.data.qrDataURL) {-->
+<!--                                            $('#qrCode').html('<img src="' + response.data.qrDataURL + '" alt="QR Code" />');-->
+<!--                                            $('#qrCodeContainer').show();-->
+<!--                                            isQrGenerated = true;-->
+<!--                                            $('.btn-submit').removeAttr('disabled');-->
+<!--                                        } else {-->
+<!--                                            console.error('Error: No QR Code received.');-->
+<!--                                        }-->
+<!--                                    },-->
+<!--                                    error: function (xhr, status, error) {-->
+<!--                                        console.error('Error generating QR Code:', error);-->
+<!--                                    }-->
+<!--                                });-->
+<!--                            } else {-->
+<!--                                console.error('Invalid input for QR Code generation.');-->
+<!--                            }-->
+<!--                        });-->
+<!--                        $('#checkoutForm').on('submit', function (event) {-->
+<!--                            var selectedMethod = $('input[name="paymentMethod"]:checked').val();-->
+<!--                            if (selectedMethod === 'chuyenKhoan' && !isQrGenerated) {-->
+<!--                                alert('Vui lòng tạo mã QR trước khi thanh toán.');-->
+<!--                                event.preventDefault(); // Ngăn chặn form submit nếu chưa tạo mã QR-->
+<!--                            }-->
+<!--                        });-->
+<!--                        // Trigger change event to set initial state-->
+<!--                        $('input[name="paymentMethod"]:checked').trigger('change');-->
+<!--                    });-->
+<!--                    $('#checkoutForm').on('submit', function (event) {-->
+<!--                        event.preventDefault(); // Ngăn chặn hành động submit mặc định-->
+<!--                        // Hiển thị thông báo xác nhận in hóa đơn-->
+<!--                        if (confirm("Bạn có muốn in hóa đơn không?")) {-->
+<!--                            // Thực hiện hành động in hóa đơn-->
+<!--                            window.print();-->
+<!--                            this.submit();-->
+<!--                        } else {-->
+<!--                            // Thực hiện gửi form mà không in hóa đơn-->
+<!--                            this.submit();-->
+<!--                        }-->
+<!--                    });-->
+<!--                </script>-->
+<!--                <script>-->
+<!--                    function checkValidate() {-->
+<!--                        let tenKhachHang = document.getElementById('tenKhachHang');-->
+<!--                        let sdt = document.getElementById('sdt');-->
+<!--                        let usernameValue = tenKhachHang.value.trim();-->
+<!--                        let phoneValue = sdt.value.trim();-->
+<!--                        let isCheck = true;-->
+<!--                        // Kiểm tra trường tên khách hàng nếu có giá trị-->
+<!--                        if (usernameValue !== '') {-->
+<!--                            if (!isNaN(usernameValue) || usernameValue.includes(' ')) {-->
+<!--                                // Kiểm tra xem tên có phải là số hoặc có khoảng cách-->
+<!--                                setError(tenKhachHang, 'Tên khách hàng không được là số và không chứa khoảng cách');-->
+<!--                                isCheck = false;-->
+<!--                            } else {-->
+<!--                                setSuccess(tenKhachHang);-->
+<!--                            }-->
+<!--                        }-->
+<!--                        // Kiểm tra trường số điện thoại nếu có giá trị-->
+<!--                        if (phoneValue !== '') {-->
+<!--                            if (!isPhone(phoneValue)) {-->
+<!--                                setError(sdt, 'Số điện thoại không đúng định dạng');-->
+<!--                                isCheck = false;-->
+<!--                            } else {-->
+<!--                                setSuccess(sdt);-->
+<!--                            }-->
+<!--                        }-->
+<!--                        return isCheck;-->
+<!--                    }-->
+
+<!--                    function isPhone(phone) {-->
+<!--                        const phonePattern = /^\d{10,15}$/;-->
+<!--                        return phonePattern.test(phone);-->
+<!--                    }-->
+
+<!--                    // Hàm thiết lập thông báo lỗi-->
+<!--                    function setError(element, message) {-->
+<!--                        let errorMessage = element.nextElementSibling;-->
+<!--                        errorMessage.textContent = message;-->
+<!--                        element.classList.add('is-invalid');-->
+<!--                    }-->
+
+<!--                    // Hàm thiết lập thông báo thành công-->
+<!--                    function setSuccess(element) {-->
+<!--                        let errorMessage = element.nextElementSibling;-->
+<!--                        errorMessage.textContent = '';-->
+<!--                        element.classList.remove('is-invalid');-->
+<!--                    }-->
+<!--                </script>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </section>-->
+<!--</div>-->
+<!--<div th:replace="~{admin/common/foodter.html}"></div>-->
+<!--<th:block th:replace="jsImport.html :: layout_import_js"/>-->
+<!--</body>-->
+<!--</html>-->
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout Form</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+          integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <style>
+        body {
+            padding: 20px;
+        }
+
+        .invoice-heading {
+            background-color: #f5f5f5;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .invoice-details {
+            margin-bottom: 20px;
+        }
+
+        .table {
+            margin-bottom: 20px;
+        }
+
+        .btn-submit {
+            margin-top: 20px;
+        }
+
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+
+        .success-message {
+            color: green;
+            margin-top: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .radio-label {
+            font-weight: bold;
+        }
+
+        .money-payment {
+            display: none;
+        }
+
+        .money-return-red {
+            color: red;
+        }
+
+        #qrCodeContainer {
+            display: none;
+        }
+
+        .form-control.error input {
+            border-color: red;
+        }
+
+        .form-control.success input {
+            border-color: green;
+        }
+    </style>
+    <th:block th:replace="~{cssImport.html :: layout_import_css}"/>
+</head>
+<body>
+<div th:replace="~{admin/common/Header.html}"></div>
+<div th:replace="~{admin/common/menu.html}"></div>
+<div class="content-wrapper">
+    <section class="content">
+        <div class="main-content">
+            <div class="main-content-inner">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="invoice-heading">
+                                <h2>Thông tin hóa đơn</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="invoice-details">
+                                <p><strong>Hóa đơn ID:</strong> <span id="hoaDonIdSpan" th:text="${hoaDon.id}"></span></p>
+                                <p><strong>Ngày Tạo:</strong> <span th:text="${hoaDon.createDate}"></span></p>
+                            </div>
+                            <form th:action="@{'/payment/'+ ${hoaDon.id}}" method="post" id="checkoutForm">
+                                <input type="hidden" name="hoaDonId" th:value="${hoaDon.id}"/>
+                                <div class="form-group">
+                                    <label for="tenKhachHang"><strong>Tên khách hàng:</strong></label>
+                                    <input type="text" class="form-control" id="tenKhachHang" name="tenKhachHang"
+                                           th:value="${hoaDon.user != null ? hoaDon.user.ten : ''}"
+                                           placeholder="Tên khách hàng"/>
+                                    <small class="error-message"></small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="sdt"><strong>Số điện thoại:</strong></label>
+                                    <input type="text" class="form-control" id="sdt" name="sdt"
+                                           th:value="${hoaDon.user != null ? hoaDon.user.sdt : ''}"
+                                           placeholder="Số điện thoại"/>
+                                    <small class="error-message"></small>
+                                </div>
+
+                                <!-- Chi tiết sản phẩm -->
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                        <tr>
+                                            <th>Tên sản phẩm</th>
+                                            <th>Số lượng</th>
+                                            <th>Đơn Giá</th>
+                                            <th>Thành tiền</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <!-- Loop through each product detail -->
+                                        <tr th:each="chiTiet : ${hoaDon.hoaDonChiTiets}">
+                                            <td th:text="${chiTiet.sanPhamChiTiet.sanPham.tenSanPham}+'  '+${chiTiet.sanPhamChiTiet.mauSac.ten}+'  ' +${chiTiet.sanPhamChiTiet.kichCo.tenKichCo}"></td>
+                                            <td th:text="${chiTiet.soLuong}"></td>
+                                            <td th:text="${chiTiet.sanPhamChiTiet.getGiaSanPham()}"></td>
+                                            <td th:text="${chiTiet.thanhTien}"></td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+<!--                                <p><strong>Tổng tiền:</strong> <span id="tongTienSpan" th:text="${hoaDon.tongTien}"></span></p>-->
+                               <strong>Tổng tiền:</strong> <span id="tongTienSpan" th:text="${hoaDon.tongTien}"></span></p>
+                                <!-- Dropdown cho mã giảm giá -->
+                                <div class="form-group">
+                                    <label for="voucherSelect"><strong>Mã giảm giá:</strong></label>
+                                    <select id="voucherSelect" name="voucherId"  class="form-control">
+                                        <option value="" data-discount="0">Chọn mã giảm giá</option>
+                                        <!-- Mã giảm giá sẽ được thêm từ AJAX -->
+                                    </select>
+                                </div>
+
+<!--                                <p><strong>Tổng tiền sau khi giảm giá:</strong> <span id="totalAmount"></span></p>-->
+                                <p id="discountedTotalContainer" style="display: none;">
+                                    <strong>Tổng tiền sau khi giảm giá:</strong> <span id="totalAmount" th:text="${hoaDon.tongTien}"></span>
+                                </p>
+
+                                <div class="form-group">
+                                    <label class="radio-label"><strong>Phương thức thanh toán:</strong></label><br/>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="paymentMethod"
+                                               id="paymentMethod1" value="tienMat" required/>
+                                        <label class="form-check-label" for="paymentMethod1">Tiền mặt</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="paymentMethod"
+                                               id="paymentMethod2" value="chuyenKhoan"/>
+                                        <label class="form-check-label" for="paymentMethod2">Chuyển khoản</label>
+                                    </div>
+                                </div>
+                                <div class="form-group money-payment" id="moneyPayment">
+                                    <label for="tienKhachDua"><strong>Tiền khách đưa:</strong></label>
+                                    <input type="text" class="form-control" id="tienKhachDua" name="tienKhachDua"
+                                           min="0" step="1000">
+                                    <small id="moneyReturnHelp" class="form-text text-muted"></small>
+                                </div>
+                                <div class="form-group" id="qrCodeContainer">
+                                    <label for="qrCode"><strong>Mã QR Chuyển khoản:</strong></label>
+                                    <div id="qrCode"></div>
+                                    <button type="button" class="btn btn-secondary" id="generateQrCodeBtn">Tạo Mã QR
+                                    </button>
+                                </div>
+                            <!-- Error and success messages -->
+                            <div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
+                            <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+                                <button type="submit" class="btn btn-primary btn-submit" disabled>Thanh toán</button>
+                            </form>
+
+
+                            <!-- Error and success messages -->
+                            <div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
+                            <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Bootstrap JS and dependencies (for optional features) -->
+                <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+                <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"
+                        integrity="sha384-p3Fm+zQAA/mTz8Dq+1GGbB0rYH2zzE3k6fVLYMQFJpEJ9MvDzo8zXNa69daTlY3Z"
+                        crossorigin="anonymous"></script>
+                <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+                        integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8sh+EWlE/hb3EhsR/pAITtcQj6eGwYXpG2QNIq"
+                        crossorigin="anonymous"></script>
+                <script>
+                    $(document).ready(function () {
+                        // Tải danh sách voucher từ API
+                        $.ajax({
+                            url: '/api/voucher',
+                            type: 'GET',
+                            success: function (response) {
+                                response.forEach(function (voucher) {
+                                    $('#voucherSelect').append(`
+                        <option value="${voucher.id}" data-discount="${voucher.phanTramGiam}">${voucher.ten} - ${voucher.phanTramGiam}%</option>
+                    `);
+                                });
+                            },
+                            error: function (xhr) {
+                                alert('Đã xảy ra lỗi khi tải các voucher. Vui lòng thử lại.');
+                            }
+                        });
+
+                        // Gán giá trị ban đầu cho tổng số tiền
+                        var originalTotalAmount = parseFloat($('#tongTienSpan').text().replace(/,/g, ''));
+                        var currentTotalAmount = originalTotalAmount; // Biến lưu tổng số tiền hiện tại
+                        $('#totalAmount').text(originalTotalAmount.toLocaleString('vi-VN') + ' VND'); // Hiển thị tổng số tiền ban đầu
+
+                        // Ẩn thông báo tổng số tiền sau giảm giá ban đầu
+                        $('#discountedTotalContainer').hide(); // Giả sử bạn bọc totalAmount bằng một container
+
+                        // Biến để lưu voucher đã chọn trước đó
+                        var previousVoucherId = null;
+
+                        $('#voucherSelect').change(function () {
+                            var selectedDiscount = $(this).find('option:selected').data('discount'); // Lấy phần trăm giảm giá
+                            var newTotalAmount;
+
+                            // Kiểm tra xem có voucher nào được chọn không
+                            if (selectedDiscount) {
+                                var discountAmount = originalTotalAmount * (selectedDiscount / 100);
+                                newTotalAmount = originalTotalAmount - discountAmount;
+                                $('#discountedTotalContainer').show(); // Hiển thị tổng số tiền đã giảm
+                            } else {
+                                newTotalAmount = originalTotalAmount; // Không có voucher, giữ nguyên tổng
+                                $('#discountedTotalContainer').hide(); // Ẩn tổng số tiền đã giảm
+                            }
+
+                            currentTotalAmount = newTotalAmount; // Cập nhật tổng số tiền hiện tại
+                            $('#totalAmount').text(newTotalAmount.toLocaleString('vi-VN') + ' VND'); // Định dạng và hiển thị tổng số tiền mới
+
+                            console.log(currentTotalAmount+"a")
+                            // Cập nhật tiền thối sau khi chọn voucher
+                            updateMoneyReturn(); // Cập nhật thông tin tiền thối
+
+                            // Kiểm tra xem voucher đã chọn có khác với voucher trước đó không
+                            var currentVoucherId = $(this).val();
+                            if (previousVoucherId && previousVoucherId !== currentVoucherId) {
+                                var selectedPaymentMethod = $('input[name="paymentMethod"]:checked').val(); // Lấy phương thức thanh toán đã chọn
+                                if (selectedPaymentMethod === 'chuyenKhoan') { // Chỉ hiển thị thông báo nếu phương thức thanh toán là chuyển khoản
+                                    alert("Bạn đã chọn một voucher khác. Vui lòng tạo mã QR mới cho thanh toán chuyển khoản.");
+                                    // Tắt nút thanh toán
+                                    $('.btn-submit').attr('disabled', true);
+                                }
+                            }
+
+                            previousVoucherId = currentVoucherId; // Cập nhật voucher trước đó
+                        });
+
+
+                        // Cập nhật thông tin tiền trả lại
+                        var updateMoneyReturn = function () {
+                            var tienKhachDuaStr = $('#tienKhachDua').val().replace(/\./g, '');
+                            var tienKhachDua = parseInt(tienKhachDuaStr);
+                            var moneyReturnHelp = $('#moneyReturnHelp');
+                            var submitButton = $('.btn-submit');
+
+                            if (!isNaN(tienKhachDua)) {
+                                // Tính toán tiền thối
+                                var tienTraLai = tienKhachDua - currentTotalAmount; // Sử dụng currentTotalAmount
+                                if (tienTraLai >= 0) {
+                                    moneyReturnHelp.text('Tiền trả lại: ' + tienTraLai.toLocaleString('vi-VN') + ' VND');
+                                    moneyReturnHelp.removeClass('money-return-red');
+                                    // Bật nút thanh toán nếu không cần tạo mã QR
+                                    if (isQrGenerated) {
+                                        submitButton.removeAttr('disabled'); // Bật nút thanh toán khi đủ tiền
+                                    }
+                                } else {
+                                    moneyReturnHelp.text('Khách chưa đưa đủ tiền.');
+                                    moneyReturnHelp.addClass('money-return-red');
+                                    submitButton.attr('disabled', true); // Tắt nút thanh toán khi không đủ tiền
+                                }
+                            } else {
+                                moneyReturnHelp.text('');
+                                submitButton.attr('disabled', true); // Tắt nút thanh toán nếu ô nhập liệu trống
+                            }
+                        };
+
+                        // Lắng nghe sự kiện nhập liệu của khách
+                        $('#tienKhachDua').on('input', function () {
+                            updateMoneyReturn(); // Cập nhật tiền thối khi khách nhập
+                        });
+
+                        // Định dạng lại số tiền khi khách rời khỏi ô nhập liệu
+                        $('#tienKhachDua').on('blur', function () {
+                            var tienKhachDuaStr = $(this).val().replace(/\./g, '');
+                            var tienKhachDua = parseInt(tienKhachDuaStr);
+                            if (!isNaN(tienKhachDua)) {
+                                $(this).val(tienKhachDua.toLocaleString('vi-VN')); // Định dạng lại số tiền
+                            }
+                        });
+
+                        // Xử lý phương thức thanh toán
+                        $('input[name="paymentMethod"]').on('change', function () {
+                            var selectedMethod = $('input[name="paymentMethod"]:checked').val();
+                            if (selectedMethod === 'tienMat') {
+                                $('#moneyPayment').show(); // Hiển thị phần thanh toán tiền mặt
+                                $('#tienKhachDua').attr('required', true); // Đánh dấu ô nhập tiền khách là bắt buộc
+                                $('#qrCodeContainer').hide(); // Ẩn phần chứa mã QR
+                                isQrGenerated = true; // Không cần mã QR cho thanh toán tiền mặt
+                                $('.btn-submit').removeAttr('disabled'); // Bật nút thanh toán
+                            } else if (selectedMethod === 'chuyenKhoan') {
+                                $('#moneyPayment').hide(); // Ẩn phần thanh toán tiền mặt
+                                $('#tienKhachDua').removeAttr('required'); // Bỏ yêu cầu cho ô nhập tiền khách
+                                $('#qrCodeContainer').show(); // Hiển thị phần chứa mã QR
+                                isQrGenerated = false; // Cần tạo mã QR cho chuyển khoản
+                                $('.btn-submit').attr('disabled', true); // Tắt nút thanh toán cho chuyển khoản
+                            }
+                        });
+
+                        // Logic tạo mã QR
+                        $('#generateQrCodeBtn').click(function () {
+                            var hoaDonId = $('#hoaDonIdSpan').text().trim();
+                            var paymentMethod = $('input[name="paymentMethod"]:checked').val();
+                            if (paymentMethod === 'chuyenKhoan') {
+                                var requestData = {
+                                    "accountNo": "9159678903",
+                                    "accountName": "NGUYEN THE ANH",
+                                    "acqId": 970407,
+                                    "amount": currentTotalAmount.toFixed(0), // Sử dụng tổng số tiền hiện tại
+                                    "addInfo": "Thanh toan " + hoaDonId,
+                                    "template": "compact"
+                                };
+
+                                $.ajax({
+                                    url: 'https://api.vietqr.io/v2/generate',
+                                    type: 'POST',
+                                    headers: {
+                                        'x-client-id': 'b7ae6fa4-bc11-40be-aca1-98f275a8c493',
+                                        'x-api-key': '4e8bebfb-9073-4686-bbaa-d71bcc5dc0ec',
+                                        'Content-Type': 'application/json'
+                                    },
+                                    data: JSON.stringify(requestData),
+                                    success: function (response) {
+                                        if (response && response.data.qrDataURL) {
+                                            $('#qrCode').html('<img src="' + response.data.qrDataURL + '" alt="QR Code" />'); // Hiển thị mã QR
+                                            $('#qrCodeContainer').show(); // Hiển thị container chứa mã QR
+                                            isQrGenerated = true; // Đánh dấu đã tạo mã QR
+                                            $('.btn-submit').removeAttr('disabled'); // Bật nút thanh toán sau khi tạo mã QR
+                                        } else {
+                                            console.error('Lỗi: Không nhận được mã QR.');
+                                        }
+                                    },
+                                    error: function (xhr, status, error) {
+                                        console.error('Lỗi khi tạo mã QR:', error);
+                                    }
+                                });
+                            } else {
+                                console.error('Đầu vào không hợp lệ cho việc tạo mã QR.');
+                            }
+                        });
+
+                        // Xử lý khi gửi biểu mẫu
+                        $('#checkoutForm').on('submit', function (event) {
+                            var selectedMethod = $('input[name="paymentMethod"]:checked').val();
+                            if (selectedMethod === 'chuyenKhoan' && !isQrGenerated) {
+                                alert('Vui lòng tạo mã QR trước khi thanh toán.'); // Cảnh báo nếu mã QR chưa được tạo
+                                event.preventDefault(); // Ngăn chặn gửi biểu mẫu nếu mã QR chưa được tạo
+                            } else {
+                                // Xác nhận trước khi in hóa đơn
+                                if (confirm("Bạn có muốn in hóa đơn không?")) {
+                                    window.print(); // In hóa đơn
+                                }
+                            }
+                        });
+
+                        // Kích hoạt sự kiện thay đổi để thiết lập trạng thái ban đầu
+                        $('input[name="paymentMethod"]:checked').trigger('change');
+                    });
+                </script>
+
+
+            </div>
+        </div>
+    </section>
+</div>
+<div th:replace="~{admin/common/foodter.html}"></div>
+<th:block th:replace="jsImport.html :: layout_import_js"/>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Biểu Đồ Thống Kê Doanh Số</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<!-- CSS Files -->
+<link rel="stylesheet" href="dist/admin.assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="dist/admin.assets/css/plugins.min.css" />
+<link rel="stylesheet" href="dist/admin.assets/css/kaiadmin.min.css" />
+
+<!-- CSS Just for demo purpose, don't include it in your project -->
+<link rel="stylesheet" href="../assets/css/demo.css" />
+<h1>Thống Kê Doanh Số Theo Tháng</h1>
+<canvas id="salesChart" width="400" height="200"></canvas>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    fetch('/api/thongke/theothang')
+            .then(response => response.json())
+            .then(data => {
+              // Xử lý dữ liệu để phù hợp với Chart.js
+              const labels = data.map(item => item[0]);
+              const values = data.map(item => item[1]);
+
+              // Tạo một mảng màu cho các tháng
+              const backgroundColors = [
+                'rgba(75, 192, 192, 0.2)', // Tháng 1
+                'rgba(153, 102, 255, 0.2)', // Tháng 2
+                'rgba(255, 159, 64, 0.2)', // Tháng 3
+                'rgba(255, 99, 132, 0.2)', // Tháng 4
+                'rgba(54, 162, 235, 0.2)', // Tháng 5
+                'rgba(255, 206, 86, 0.2)', // Tháng 6
+                'rgba(75, 192, 192, 0.2)', // Tháng 7
+                'rgba(153, 102, 255, 0.2)', // Tháng 8
+                'rgba(255, 159, 64, 0.2)', // Tháng 9
+                'rgba(255, 99, 132, 0.2)', // Tháng 10
+                'rgba(54, 162, 235, 0.2)', // Tháng 11
+                'rgba(255, 206, 86, 0.2)'  // Tháng 12
+              ];
+
+              // Tạo một mảng màu cho các viền của các phần
+              const borderColors = [
+                'rgba(75, 192, 192, 1)', // Tháng 1
+                'rgba(153, 102, 255, 1)', // Tháng 2
+                'rgba(255, 159, 64, 1)', // Tháng 3
+                'rgba(255, 99, 132, 1)', // Tháng 4
+                'rgba(54, 162, 235, 1)', // Tháng 5
+                'rgba(255, 206, 86, 1)', // Tháng 6
+                'rgba(75, 192, 192, 1)', // Tháng 7
+                'rgba(153, 102, 255,1)', // Tháng 8
+                'rgba(255, 159, 64, 1)', // Tháng 9
+                'rgba(255, 99, 132, 1)', // Tháng 10
+                'rgba(54, 162, 235, 1)', // Tháng 11
+                'rgba(255, 206, 86, 1)'  // Tháng 12
+              ];
+
+              const ctx = document.getElementById('salesChart').getContext('2d');
+              new Chart(ctx, {
+                type: 'bar',
+                data: {
+                  labels: labels,
+                  datasets: [{
+                    label: 'Doanh Số',
+                    data: values,
+                    backgroundColor: backgroundColors.slice(0, labels.length), // Cắt mảng màu để phù hợp với số lượng tháng
+                    borderColor: borderColors.slice(0, labels.length), // Cắt mảng màu viền để phù hợp với số lượng tháng
+                    borderWidth: 1
+                  }]
+                },
+                options: {
+                  scales: {
+                    r: {
+                      beginAtZero: true
+                    }
+                  }
+                }
+              });
+            })
+            .catch(error => console.error('Error fetching data:', error));
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <th:block th:replace="~{cssImport.html :: layout_import_css}"/>
+    <style>
+        /* Đảm bảo toàn bộ bảng có kích thước và canh chỉnh đúng */
+        table {
+            width: 100%;
+        }
+
+        /* Canh giữa checkbox trong cột */
+        td, th {
+            text-align: center; /* Căn giữa theo chiều ngang */
+            vertical-align: middle; /* Căn giữa theo chiều dọc */
+        }
+
+        .checkbox-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%; /* Đảm bảo chiều cao của container khớp với ô */
+        }
+    </style>
+</head>
+
+<body>
+<div th:replace="~{admin/common/Header.html}"></div>
+<div th:replace="~{admin/common/menu.html}"></div>
+<div class="content-wrapper">
+    <section class="content">
+        <div class="main-content">
+            <div class="main-content-inner">
+                <div class="container mt-4">
+                    <label>Danh sách Hóa đơn cần đổi </label>
+                    <table class="table table-bordered">
+                        <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Hình Ảnh</th>
+                            <th scope="col">Kích cỡ</th>
+                            <th scope="col"> Giá</th>
+                            <th scope="col"> Tên Sản Phẩm</th>
+                            <th scope="col">Lý Do</th>
+                            <th scope="col">Trạng Thái</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Số Lượng Cần Đổi</th>
+                            <th scope="col">Ngày Đổi Trả</th>
+                            <th scope="col">Chọn</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                        </thead>
+                        <tbody id="traHangTableBody">
+                        <!-- Dữ liệu từ API sẽ được thêm vào đây -->
+                        </tbody>
+                    </table>
+
+                    <!-- Phân trang -->
+                    <nav>
+                        <ul class="pagination justify-content-center" id="pagination">
+                            <!-- Nút phân trang sẽ được thêm vào đây -->
+                        </ul>
+                    </nav>
+                    <div class="product-list">
+                        <h2>Danh Sách Sản Phẩm</h2>
+                        <table class="table table-bordered">
+                            <thead>
+                            <tr>
+                                <th>Ảnh</th>
+                                <th>Tên</th>
+                                <th>Kích Cỡ</th>
+                                <th>Số Lượng</th>
+                                <th>Giá Sản Phẩm</th>
+                            </tr>
+                            </thead>
+                            <tbody id="product-list">
+                            <!-- Sản phẩm sẽ được tải ở đây bởi JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+<div class="modal fade" id="newModal" tabindex="-1" aria-labelledby="newModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newModalLabel">Danh sách sản phẩm mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Ảnh</th>
+                        <th>Tên</th>
+                        <th>Kích Cỡ</th>
+                        <th>Số Lượng</th>
+                        <th>Giá Sản Phẩm</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody id="new-product-detail-list">
+                    <!-- Dữ liệu sản phẩm mới sẽ được thêm vào đây -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="confirmNewAction">Xác nhận đổi </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    $(document).ready(function () {
+        var pageNo = 0; // Trang bắt đầu
+        var pageSize = 5; // Số lượng phần tử trên mỗi trang (có thể thay đổi)
+
+        // Hàm gọi API và hiển thị kết quả
+        function loadTraHangData(pageNo, pageSize) {
+            $.ajax({
+                url: "/api/tra-hang",
+                method: "GET",
+                data: {
+                    pageNo: pageNo,
+                    pageSize: pageSize
+                },
+                success: function (response) {
+                    var tableBody = $('#traHangTableBody');
+                    tableBody.empty(); // Xóa dữ liệu cũ
+
+                    // Kiểm tra nếu có dữ liệu
+                    if (response.content.length > 0) {
+                        // Lặp qua dữ liệu trả về và thêm vào bảng
+                        $.each(response.content, function (index, item) {
+                            // Xử lý trạng thái (0: Đang xử lý, 1: Hoàn thành)
+                            var trangThaiText = item.status === 0 ? 'Đang xử lý' : 'Hoàn thành';
+
+                            // Xác định nút sẽ hiển thị dựa trên trạng thái
+                            var actionButtons = item.status === 0 ?
+                                `<button type="button" class="btn btn-success btn-sm me-2"
+                         onclick="duyet('${item.sanPhamChiTiet.id}', '${item.hoaDon.id}',
+                          '${(item.sanPhamChiTiet.giaSanPham * item.soLuong) - ((item.sanPhamChiTiet.giaSanPham
+                                    * item.soLuong) * item.hoaDon.vouCher.phanTramGiam/ 100)}',
+                           '${item.soLuong}', '${item.type}', '${item.sanPhamChiTiet.sanPham.id}')">
+                           Duyệt
+                                 </button>
+
+                                <button type="button" class="btn btn-danger btn-sm" onclick="khongDuyet('${item.hoaDon.id}')">Không duyệt</button>`
+                                : '';
+
+                            // Thêm dữ liệu vào bảng
+                            var row = `<tr>
+            <td><img src="${item.sanPhamChiTiet.hinhAnh.duongDan}" alt="Ảnh sản phẩm" style="width: 50px; height: 50px;"></td>
+            <td>${item.sanPhamChiTiet.kichCo.tenKichCo}</td>
+            <td>${item.sanPhamChiTiet.giaSanPham}</td>
+            <td>${item.sanPhamChiTiet.sanPham.tenSanPham}</td>
+            <td>${item.lyDo}</td>
+            <td>${trangThaiText}</td>
+            <td>${item.type}</td>
+            <td>${item.soLuong}</td>
+            <td>${item.createDate}</td>
+            <td>
+                <input type="checkbox" class="form-check-input invoice-checkbox" data-id="${item.hoaDon.id}">
+            </td>
+            <td>
+                ${actionButtons}
+            </td>
+        </tr>`;
+                            tableBody.append(row);
+                        });
+
+                        // Gọi hàm hiển thị phân trang
+                        setupPagination(response.totalPages, pageNo);
+                    } else {
+                        tableBody.append('<tr><td colspan="11" class="text-center">Không có dữ liệu</td></tr>');
+                    }
+                },
+                error: function () {
+                    alert('Có lỗi xảy ra khi tải dữ liệu.');
+                }
+            });
+        }
+
+        // Hàm thiết lập phân trang
+        function setupPagination(totalPages, currentPage) {
+            var pagination = $('#pagination');
+            pagination.empty();
+
+            for (var i = 0; i < totalPages; i++) {
+                var activeClass = (i === currentPage) ? 'active' : '';
+                var pageItem = `<li class="page-item ${activeClass}">
+                                <a class="page-link" href="javascript:void(0);" data-page="${i}">${i + 1}</a>
+                            </li>`;
+                pagination.append(pageItem);
+            }
+        }
+
+        // Sự kiện khi nhấn vào nút phân trang
+        $(document).on('click', '.page-link', function () {
+            var selectedPage = $(this).data('page');
+            loadTraHangData(selectedPage, pageSize); // Tải dữ liệu trang mới
+        });
+
+        // Tải dữ liệu trang đầu tiên khi trang được tải
+        loadTraHangData(pageNo, pageSize);
+
+        // Sự kiện khi checkbox thay đổi
+        $(document).on('change', '.invoice-checkbox', function () {
+            if ($(this).is(':checked')) {
+                // Bỏ chọn tất cả các checkbox khác
+                $('.invoice-checkbox').not(this).prop('checked', false);
+
+                var invoiceId = $(this).data('id');
+                console.log('Selected invoiceId:', invoiceId); // Kiểm tra giá trị của invoiceId
+                loadProducts(invoiceId);
+            } else {
+                // Nếu checkbox bị bỏ chọn, làm trống bảng sản phẩm
+                $('#product-list').empty();
+            }
+        });
+
+        function loadProducts(invoiceId) {
+            $.ajax({
+                url: '/api/HDCT/GetALL/' + invoiceId,
+                method: 'GET',
+                success: function (data) {
+                    var productList = $('#product-list');
+                    productList.empty();
+
+                    data.forEach(function (item) {
+                        var row = $('<tr></tr>');
+                        row.append('<td><img src="' + item.sanPhamChiTiet.hinhAnh.duongDan + '" alt="Ảnh sản phẩm" style="width: 50px; height: 50px;"></td>');
+                        row.append('<td>' + item.sanPhamChiTiet.sanPham.tenSanPham + '</td>');
+                        row.append('<td>' + item.sanPhamChiTiet.kichCo.tenKichCo + '</td>');
+                        row.append('<td>' + item.soLuong + '</td>');
+                        row.append('<td>' + item.sanPhamChiTiet.giaSanPham + '</td>');
+                        productList.append(row);
+                    });
+                },
+                error: function (error) {
+                    console.error('Lỗi khi gọi API sản phẩm', error);
+                }
+            });
+        }
+
+    });
+    var globalIdHd = null;
+    var globalIdSpctCurent = null;
+    var globalNewIdSpct = null;
+    var globalSoLuong = null;
+    function duyet(idSP, idHoaDon, tongTra, soLuong, type,idSanPham) {
+
+        globalIdHd = idHoaDon;
+        globalIdSpctCurent = idSP;
+        globalSoLuong = soLuong;
+        console.log("Type received:", type);
+        if (type === 'Đổi') {
+            $('#newModal').modal('show');  // Chỉ hiển thị modal
+            $.ajax({
+                url: '/api/SPCT/by-idsp/' + idSanPham,
+                method: 'GET',
+                success: function (response) {
+                    // Xóa dữ liệu cũ trong bảng
+                    $('#new-product-detail-list').empty();
+
+                    // Thêm dữ liệu mới vào bảng
+                    response.forEach(function (item) {
+                        $('#new-product-detail-list').append(
+                            '<tr>' +
+                            '<td><img src="' + item.hinhAnh.duongDan + '" alt="Ảnh sản phẩm" style="width: 50px; height: 50px;"></td>' +
+                            '<td>' + item.sanPham.tenSanPham + '</td>' +
+                            '<td>' + item.kichCo.tenKichCo + '</td>' +
+                            '<td>' + item.soLuong + '</td>' +
+                            '<td>' + item.giaSanPham + '</td>' +
+                            '<td><input type="checkbox" name="selectedProducts" value="' + item.id + '"></td>'+
+                            '</tr>'
+                        );
+                    });
+                    $('#new-product-detail-list').on('change', 'input[name="selectedProducts"]', function () {
+                        // Bỏ chọn tất cả các checkbox khác
+                        $('input[name="selectedProducts"]').not(this).prop('checked', false);
+                    });
+                },
+                error: function (error) {
+                    console.error('Lỗi khi lấy dữ liệu sản phẩm chi tiết', error);
+                }
+            });
+        } else {
+            // Tiếp tục với quá trình duyệt nếu không phải là "Đổi"
+            $.ajax({
+                url: '/api/HDCT/xoa/' + idSP + '/' + idHoaDon + '/' + tongTra + '/' + soLuong,
+                method: 'DELETE',
+                success: function (response) {
+                    alert('Duyệt thành công!');
+                    $.ajax({
+                        url: '/api/tra-hang/update-status/' + idHoaDon,
+                        method: 'PUT',
+                        success: function (response) {
+                            console.log('Trạng thái đã được cập nhật');
+                            window.location.reload();
+                        },
+                        error: function (error) {
+                            console.error('Lỗi khi cập nhật trạng thái', error);
+                        }
+                    });
+                },
+                error: function (error) {
+                    console.error('Lỗi khi duyệt', error);
+                }
+            });
+        }
+    }
+
+
+
+    function khongDuyet(hoaDonId) {
+        $.ajax({
+            url: '/api/tra-hang/update-status/' + hoaDonId,
+            method: 'PUT',
+            success: function (response) {
+                console.log('Trạng thái đã được cập nhật');
+                window.location.reload();
+            },
+            error: function (error) {
+                console.error('Lỗi khi cập nhật trạng thái', error);
+            }
+        });
+    }
+    $(document).ready(function () {
+        // Khi nhấn nút xác nhận đổi
+        $('#confirmNewAction').on('click', function () {
+            // Lấy thông tin từ checkbox đã chọn
+            var selectedCheckbox = $('input[name="selectedProducts"]:checked');
+            if (selectedCheckbox.length === 0) {
+                alert('Vui lòng chọn ít nhất một sản phẩm.');
+                return;
+            }
+
+           var  newIdSpct =globalNewIdSpct = selectedCheckbox.val();
+            var idHoaDon = globalIdHd;
+            var idSpctCuren = globalIdSpctCurent;
+            var soLuong =globalSoLuong;
+
+            console.log(newIdSpct+'/'+idHoaDon+'/'+idSpctCuren)
+
+            // Gọi API để cập nhật
+
+            $.ajax({
+                url: '/api/HDCT/update/' + newIdSpct + '/' + idHoaDon + '/' + idSpctCuren + '/' + soLuong,
+                method: 'PUT',
+                success: function (response) {
+                    alert('Cập nhật thành công!');
+                    $('#newModal').modal('hide'); // Đóng modal
+                    $.ajax({
+                        url: '/api/tra-hang/update-status/' + idHoaDon,
+                        method: 'PUT',
+                        success: function (response) {
+                            console.log('Trạng thái đã được cập nhật');
+                            window.location.reload();
+                        },
+                        error: function (error) {
+                            console.error('Lỗi khi cập nhật trạng thái', error);
+                        }
+                    });
+
+                },
+                error: function (error) {
+                    console.error('Lỗi khi cập nhật hóa đơn chi tiết', error);
+                    alert('Có lỗi xảy ra, vui lòng thử lại.');
+                }
+            });
+        });
+    });
+
+
+
+</script>
+
+<div th:replace="~{admin/common/foodter.html}"></div>
+<th:block th:replace="jsImport.html :: layout_import_js"/>
+</body>
+</html>

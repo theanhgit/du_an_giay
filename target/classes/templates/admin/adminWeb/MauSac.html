@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/jquery.validation/latest/jquery.validate.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <th:block th:replace="~{cssImport.html :: layout_import_css}"/>
+</head>
+
+<body>
+<div th:replace="admin/common/Header.html"></div>
+<div class="container mt-4">
+  <form th:action="@{/mausac/add}" th:object="${mauSac}" method="post">
+    <div class="form-row">
+      <div class="form-group col-md-2">
+        <label for="ten">Tên</label>
+        <input type="text" class="form-control" id="ten" th:field="*{ten}" placeholder="Tên" required>
+      </div>
+      <div class="form-group col-md-2">
+        <label for="trangThai">Trạng Thái</label>
+        <input type="text" class="form-control" id="trangThai" th:field="*{trangThai}" placeholder="Trạng Thái" required>
+      </div>
+      <button type="submit" class="btn btn-success" id="btnAdd">Add</button>
+    </div>
+</div>
+</form>
+<table class="table table-bordered">
+  <thead class="thead-dark">
+  <tr>
+    <th>Tên </th>
+    <th>Ngày Tạo</th>
+    <th>Ngày Sửa</th>
+    <th>Trạng Thái</th>
+    <th>Actions</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr th:each="mauSac : ${listMauSac}">
+    <td th:text="${mauSac.ten}"></td>
+    <td th:text="${mauSac.createDate}"></td>
+    <td th:text="${mauSac.updateDate}"></td>
+    <td th:text="${mauSac.trangThai}"></td>
+
+    <td>
+      <a th:href="@{/mausac/detail/{id}(id=${mauSac.id})}" class="btn btn-primary">Detail</a>
+      <form th:action="@{/mausac/delete/{id}(id=${mauSac.id})}" method="post">
+        <button type="submit" class="btn btn-danger">Delete</button>
+      </form>
+
+
+    </td>
+  </tr>
+  </tbody>
+</table>
+</div>
+<div th:replace="admin/common/foodter.html"></div>
+</body>
+</html>

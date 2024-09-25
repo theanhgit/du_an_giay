@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" 
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script th:src="@{/dist/admin/assets/js/bootstrap.min.js}"></script>
+</head>
+<body>
+    <div class="modal fade" id="updateModal" tabindex="-1" aria-labelledby="updateModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateModalLabel">Update Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Form cập nhật -->
+                    <form id="update-product">
+                        <!-- Các trường cập nhật -->
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="update-name-product">Name sanPhamCT</label>
+                                <input type="text" class="form-control" id="update-name-product" name="name-product">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="update-price-product">Price sanPhamCT</label>
+                                <input type="text" class="form-control" id="update-price-product" name="price-product">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="update-quantity">Quantity</label>
+                                <input type="number" class="form-control" id="update-quantity" name="update-quantity">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="update-Color">Color</label>
+                                <input type="text" class="form-control" id="update-Color" name="update-Color">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="update-Status">Status</label>
+                                <input type="text" class="form-control" id="update-Status" name="update-Status">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="update-categorySelect">Category</label>
+                                <select class="form-control" id="update-categorySelect" name="update-categorySelect">
+
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="btn-update">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button id="btn-save">Submit</button>
+     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script>
+        document.getElementById('btn-save').addEventListener('click', function() {
+            // Mở modal khi click vào nút "Submit"
+            var myModal = new bootstrap.Modal(document.getElementById('updateModal'));
+            myModal.show();
+        });
+    </script>
+</body>
+</html>

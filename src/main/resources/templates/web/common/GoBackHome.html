@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Error</title>
+  <!-- Include jQuery library -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+<h1>Something went wrong!</h1>
+<p>We can't find the page you're looking for.</p>
+<a id="goBackHome" href="/trang-chu">Go back to home</a>
+</body>
+<script>
+  $(document).ready(function() {
+    // Gọi hàm logout ngay khi trang tải xong
+    logout();
+
+    // Hàm logout
+    function logout() {
+      $.ajax({
+        url: '/api/users/logout',
+        type: 'GET',
+        contentType: 'application/json',
+        success: function(response) {
+          // Sau khi logout thành công, chuyển hướng về trang chủ
+          window.location.href = '/trang-chu';
+        },
+        error: function(xhr) {
+          if (xhr.status === 401) {
+            alert('Invalid credentials');
+          } else {
+            alert('An error occurred. Please try again.');
+          }
+        }
+      });
+    }
+  });
+</script>
+</html>

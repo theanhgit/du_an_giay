@@ -1,0 +1,152 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<aside class="main-sidebar sidebar-dark-primary elevation-4" th:fragment="layout_user_menuUser">
+    <!-- Brand Logo -->
+    <a href="index.html" class="brand-link">
+        <img src="/dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+        <span class="brand-text font-weight-light">AdminLTE 3</span>
+    </a>
+    <div class="codepro-time">
+        <span id="codepro-hour"></span>
+        <span id="codepro-date"></span>
+    </div>
+    <style>
+        .codepro-time{text-align:center;}
+        #codepro-hour{font-weight:400;display:block;font-size:30px;margin: 0 0 5px;letter-spacing:5px;}
+    </style>
+    <script type="text/javascript">
+        var myVar = setInterval(function() {
+            myTimer()
+        }, 1000);
+        function myTimer() {
+            var d = new Date();
+            var t = d.toLocaleTimeString();
+            document.getElementById("codepro-hour").innerHTML = t;
+        }
+        n   = new Date();
+        if (n.getTimezoneOffset() == 0) t = n.getTime() + (7 * 60 * 60 * 1000);
+        else t = n.getTime();
+        n.setTime(t);
+        var dn = new Array("Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7");
+        d = n.getDay();
+        m = n.getMonth() + 1;
+        y = n.getFullYear()
+        var date = dn[d] + ", " + (n.getDate() < 10 ? "0" : "") + n.getDate() + "/" + (m < 10 ? "0" : "") + m + "/" + y;
+        document.getElementById("codepro-date").innerHTML = date;
+    </script>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <!-- SidebarSearch Form -->
+        <div class="form-inline">
+            <div class="input-group" data-widget="sidebar-search">
+                <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
+                <div class="input-group-append">
+                    <button class="btn btn-sidebar">
+                        <i class="fas fa-search fa-fw"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Menu -->
+        <nav class="mt-2">
+            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                <!-- Add icons to the links using the .nav-icon class
+                     with font-awesome or any other icon font library -->
+                <li class="nav-item menu-open">
+                    <a href="/quanly-user" class="nav-link active">
+                        <i class="nav-icon fas fa-tachometer-alt"></i>
+                        <p>
+                            User
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item menu-open" >
+                            <a href="/admin" class="nav-link active">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Quản lý sản phẩm</p>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-open">
+                            <a href="/BanHangOff" class="nav-link active">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Bán Hàng</p>
+                            </a>
+                        </li>
+                        <li class="nav-item" menu-open>
+                            <a href="/thongke/sanPhamBanChay" class="nav-link active">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Thống kê </p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item" menu-open>
+                            <a href="/voucher/getAll" class="nav-link active">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>VouCher</p>
+                            </a>
+                        </li>
+                        <li class="nav-item" menu-open>
+                            <a href="/tra-hang" class="nav-link active">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Trả Hàng</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link active" id="hoaDonMenu">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>
+                                    Hóa đơn
+                                    <i class="fas fa-angle-down right"></i>
+                                </p>
+                            </a>
+                            <!-- Danh sách các tùy chọn con -->
+                            <ul class="nav nav-treeview" id="hoaDonSubMenu" style="display: none;">
+                                <li class="nav-item">
+                                    <a href="/hoadon/cho" class="nav-link active">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Hóa đơn Chờ</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/hoadon/dang-giao" class="nav-link active">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Hóa đơn đang giao</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/hoadon/hoan-thanh" class="nav-link active">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Hóa đơn hoàn thành</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/hoadon/huy" class="nav-link active">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Hóa đơn đã hủy</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+        <!-- /.sidebar-menu -->
+    </div>
+    <!-- /.sidebar -->
+</aside>
+<script>
+    $(document).ready(function() {
+        $('#hoaDonMenu').off('click').on('click', function(e) {
+            e.preventDefault(); // Ngăn chặn hành vi mặc định của liên kết
+            $('#hoaDonSubMenu').slideToggle(); // Hiển thị/ẩn danh sách tùy chọn con
+            $(this).toggleClass('menu-open'); // Thêm hoặc xóa class 'menu-open'
+        });
+    });
+
+
+
+</script>
+</html>

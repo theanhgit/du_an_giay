@@ -1,0 +1,190 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="en" xmlns:th="http://www.thymeleaf.org">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>Chi Tiết Chat Lieu</title>-->
+<!--    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">-->
+<!--    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>-->
+<!--    <script src="https://cdn.jsdelivr.net/jquery.validation/latest/jquery.validate.min.js"></script>-->
+<!--    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>-->
+<!--    <th:block th:replace="~{cssImport.html :: layout_import_css}"/>-->
+<!--    <style>-->
+<!--        /* Custom CSS */-->
+<!--        .form-group {-->
+<!--            margin-bottom: 20px;-->
+<!--        }-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--<div th:replace="admin/common/Header.html"></div>-->
+<!--<nav class="navbar navbar-expand-lg navbar-light bg-light">-->
+<!--    <div class="container">-->
+<!--        <a class="navbar-brand" href="#">Xác nhận sản phẩm</a>-->
+<!--        <div class="collapse navbar-collapse" id="navbarNav">-->
+<!--            <ul class="navbar-nav ml-auto">-->
+<!--            </ul>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</nav>-->
+<!--<div class="container mt-4">-->
+<!--    <div class="card">-->
+<!--        <div class="card-header">-->
+<!--            Thông tin sản phầm-->
+<!--        </div>-->
+<!--        <div class="card-body">-->
+<!--            <div class="row">-->
+<!--                <div class="col-md-6">-->
+<!--                    <div class="form-group">-->
+<!--                        <label >Tên:</label>-->
+<!--                        <input type="text" class="form-control" th:value="${sanpham.getSanPham().getTenSanPham()}" >-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                <div class="col-md-6">-->
+<!--                    <div class="form-group">-->
+<!--                        <label>Màu Sắc</label>-->
+<!--                        <textarea  class="form-control"-->
+<!--                                  th:text="${sanpham.getMauSac().getTen()}"></textarea>-->
+<!--                    </div>-->
+<!--                    <div class="form-group">-->
+<!--                        <label >Trạng Thái:</label>-->
+<!--                        <input type="text" class="form-control"-->
+<!--                               th:value="${sanpham.getKichCo().getTenKichCo()}">-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--            <div class="text-center">-->
+<!--                <button type="submit" class="btn btn-success">Thêm vào giỏ hàng</button>-->
+<!--                <a href="/BanHangOff" class="btn btn-secondary">Quay lại</a>-->
+<!--            </div>-->
+<!--        </form>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
+<!--<div th:replace="admin/common/foodter.html"></div>-->
+<!--</body>-->
+<!--</html>-->
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi Tiết Chat Lieu</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/latest/jquery.validate.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <th:block th:replace="~{cssImport.html :: layout_import_css}"/>
+    <style>
+        /* Custom CSS */
+        .form-group {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div th:replace="admin/common/Header.html"></div>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container">
+        <a class="navbar-brand" href="#">Xác nhận sản phẩm</a>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            Thông tin sản phầm
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Tên:</label>
+                        <input type="text" class="form-control" th:value="${sanpham.getSanPham().getTenSanPham()}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Màu Sắc</label>
+                        <textarea class="form-control"
+                                  th:text="${sanpham.getMauSac().getTen()}"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Trạng Thái:</label>
+                        <input type="text" class="form-control"
+                               th:value="${sanpham.getKichCo().getTenKichCo()}">
+                    </div>
+                </div>
+            </div>
+            <div class="text-center">
+                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#selectInvoiceModal">Thêm vào giỏ hàng</button>
+                <a href="/BanHangOff" class="btn btn-secondary">Quay lại</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal chọn hóa đơn -->
+<div class="modal fade" id="selectInvoiceModal" tabindex="-1" role="dialog" aria-labelledby="selectInvoiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="selectInvoiceModalLabel">Chọn Hóa Đơn</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="selectInvoiceForm">
+                    <div class="form-group">
+                        <label for="invoiceSelect">Hóa Đơn</label>
+                        <select class="form-control" id="invoiceSelect" name="invoiceId">
+                            <!-- Options sẽ được nạp từ server -->
+                            <option value="1">Hóa Đơn 1</option>
+                            <option value="2">Hóa Đơn 2</option>
+                            <!-- Thêm các hóa đơn khác tại đây -->
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="addToInvoiceBtn">Thêm vào hóa đơn</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="admin/common/foodter.html"></div>
+
+<script>
+    $(document).ready(function() {
+        $('#addToInvoiceBtn').click(function() {
+            var invoiceId = $('#invoiceSelect').val();
+            var productId = /* ID sản phẩm từ trang hiện tại, có thể thêm th:value trong input để lấy giá trị từ server */;
+            $.ajax({
+                url: '/addToInvoice',
+                type: 'POST',
+                data: {
+                    invoiceId: invoiceId,
+                    productId: productId
+                },
+                success: function(response) {
+                    // Xử lý phản hồi thành công
+                    alert('Sản phẩm đã được thêm vào hóa đơn');
+                    $('#selectInvoiceModal').modal('hide');
+                },
+                error: function(xhr, status, error) {
+                    // Xử lý phản hồi lỗi
+                    alert('Có lỗi xảy ra khi thêm sản phẩm vào hóa đơn');
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

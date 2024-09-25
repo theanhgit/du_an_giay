@@ -1,0 +1,1749 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý sản phẩm</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <th:block th:replace="~{cssImport.html :: layout_import_css}"/>
+    <style>
+        .modal-lg4 {
+            max-width: 40%;
+
+        }
+
+        .modal-lg3 {
+            max-width: 40%;
+
+        }
+
+        .modal-lg2 {
+            max-width: 40%;
+
+        }
+
+        .modal-lg {
+            max-width: 85%;
+
+        }
+
+        .modal-header,
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Đảm bảo modal được hiển thị rõ ràng */
+        .modal-content {
+            background-color: white !important;
+            filter: none !important;
+            opacity: 1 !important;
+        }
+
+        /* Lớp nền mờ */
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.5) !important;
+        }
+
+        .image-select-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .image-select-container select {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body class="no-skin">
+<!-- header -->
+<div th:replace="~{admin/common/Header.html}"></div>
+<div th:replace="~{admin/common/menu.html}"></div>
+<!-- header -->
+<div class="content-wrapper">
+    <section class="content">
+        <div class="main-content">
+            <div class="main-content-inner">
+                <div class="page-content">
+                    <div class="card border-primary mb-3" style="max-width: 90%; margin: auto;">
+                        <div class="card-header">
+                            <h3>Quản lý sản phẩm</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="product-form">
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label for="name-product">Tên sản phẩm</label>
+                                        <input type="text" class="form-control" id="name-product" name="name-product">
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="trangThai">Trạng Thái</label>
+                                        <div class="input-group">
+                                            <select class="form-control" id="trangThai" name="trangThai" required>
+                                                <option value="1">Đang kinh doanh</option>
+                                                <option value="0">Ngừng kinh doanh</option>
+                                            </select>
+                                        </div>
+
+                                        <input type="hidden" class="form-control" id="code-product" name="code-product">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" id="active-product"
+                                                   name="active-product">
+                                            <label class="form-check-label" for="active-product">Đang kinh doanh</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" id="inactive-product"
+                                                   name="inactive-product">
+                                            <label class="form-check-label" for="inactive-product">Ngừng kinh
+                                                doanh</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <button type="button" class="btn btn-primary" id="btn-add">Thêm</button>
+                                    <button type="button" class="btn btn-secondary" id="btn-update">Cập nhật</button>
+                                    <button type="button" class="btn btn-info" id="btn-view">Xem chi tiết</button>
+                                    <button type="reset" class="btn btn-warning" id="btn-reset">Reset</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- Bảng sản phẩm -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                            <tr>
+                                <th>Tên Sản Phẩm</th>
+                                <th>Ngày Nhập</th>
+                                <th>Trạng Thái</th>
+                                <th>Chọn</th>
+                            </tr>
+                            </thead>
+                            <tbody id="productTable">
+                            <!-- Dữ liệu sản phẩm sẽ được thêm vào đây -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- /Bảng sản phẩm -->
+                </div>
+            </div>
+        </div>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center" id="pagination">
+                <!-- Các liên kết phân trang sẽ được thêm vào đây -->
+            </ul>
+        </nav>
+    </section>
+</div>
+    <div class="modal fade" id="thanhToanModal" tabindex="-1" role="dialog" aria-labelledby="thanhToanModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="thanhToanModalLabel">Sản Phầm Chi Tiết</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <input type="hidden" class="form-control" id="idspct">
+                <div class="modal-body">
+                    <div class="container px-4 px-lg-5 mt-4">
+                        <div class="container">
+                            <form id="product-details-form">
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label for="giaSanPham">Giá sản phẩm</label>
+                                        <input type="number" class="form-control" id="giaSanPham" min="1" name="giaSanPham"
+                                               required>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="gioiTinh">Giới tính</label>
+                                        <select class="form-control" id="gioiTinh" name="gioiTinh" required>
+                                            <option value="1">Nam</option>
+                                            <option value="0">Nữ</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="soLuong">Số lượng</label>
+                                        <input type="number" class="form-control" id="soLuong" min="1" name="soLuong" required>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="trongLuong">Trọng lượng</label>
+                                        <input type="text" class="form-control" id="trongLuong" name="trongLuong"
+                                               required>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label for="danhMuc">Danh mục</label>
+                                        <div class="input-group-append">
+                                            <button class="btn btn-primary" type="button" id="ThemDanhMuc">Thêm</button>
+                                        </div>
+                                        <div class="input-group">
+                                            <select class="form-control" id="danhMuc" name="danhMuc" required></select>
+
+                                        </div>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="hinhAnh">Hình Ảnh</label>
+                                        <div class="input-group-append">
+                                            <button class="btn btn-primary" type="button" id="ThemHinhAnh">Thêm</button>
+                                        </div>
+                                        <div class="input-group">
+                                            <select class="form-control" id="hinhAnh" name="hinhAnh" required></select>
+                                            <div id="imageContainer">
+                                                <img id="selectedImage" src="" alt="Hình ảnh đã chọn"
+                                                     style="width: 50px; height: 50px; display: none;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="kichCo">Kích cỡ</label>
+                                        <div class="input-group-append">
+                                            <button class="btn btn-primary" type="button" id="themKichCo">Thêm</button>
+                                        </div>
+                                        <div class="input-group">
+                                            <select class="form-control" id="kichCo" name="kichCo" required>
+                                                <!-- Options for Kích cỡ -->
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="nsx">NSX</label>
+                                        <div class="input-group-append">
+                                            <button class="btn btn-primary" type="button">Thêm</button>
+                                        </div>
+                                        <div class="input-group">
+                                            <select class="form-control" id="nsx" name="nsx" required>
+                                                <!-- Options for NSX -->
+                                            </select>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label for="mauSac">Màu sắc</label>
+                                        <div class="input-group-append">
+                                            <button class="btn btn-primary" type="button" id="themMauSac">Thêm</button>
+                                        </div>
+                                        <div class="input-group">
+                                            <select class="form-control" id="mauSac" name="mauSac" required>
+                                                <!-- Options for Màu sắc -->
+                                            </select>
+
+                                        </div>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="chatLieu">Chất liệu</label>
+                                        <div class="input-group-append">
+                                            <button class="btn btn-primary" type="button" id="themChatLieu">Thêm
+                                            </button>
+                                        </div>
+                                        <div class="input-group">
+                                            <select class="form-control" id="chatLieu" name="chatLieu" required>
+                                                <!-- Options for Chất liệu -->
+                                            </select>
+
+                                        </div>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label for="moTa">Mô tả</label>
+                                        <textarea class="form-control" id="moTa" name="moTa" rows="3"
+                                                  required></textarea>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-4">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" id="active-product2"
+                                                   name="active-product2">
+                                            <label class="form-check-label" for="active-product2">Đang kinh
+                                                doanh</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" id="inactive-product2"
+                                                   name="inactive-product2">
+                                            <label class="form-check-label" for="inactive-product2">Ngừng kinh
+                                                doanh</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <div class="input-group">
+                                            <select class="form-control" id="trangThai2" name="trangThai2" required>
+                                                <option value="1">Đang kinh doanh</option>
+                                                <option value="0">Ngừng kinh doanh</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </form>
+                            <table id="cart2" class="table table-hover table-condensed">
+                                <thead>
+                                <tr>
+                                    <th style="width: 20%">Tên sản phẩm</th>
+                                    <th style="width: 8%">Giá</th>
+                                    <th style="width: 8%">Số lượng</th>
+                                    <th style="width: 8%">Màu Sắc</th>
+                                    <th style="width: 8%">Kích Cỡ</th>
+                                    <th style="width: 8%">NSX</th>
+                                    <th style="width: 10%">Danh Mục</th>
+                                    <th style="width: 10%">Chất Liệu</th>
+                                    <th style="width: 20%">Mô Tả</th>
+                                    <th style="width: 10%">Trọng Lượng</th>
+                                    <th style="width: 20%">Hình ảnh</th>
+                                    <th style="width: 10%">Trạng Thái</th>
+                                    <th style="width: 10%">Chọn</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                            <nav aria-label="Page navigation example">
+                                <ul class="pagination justify-content-center" id="pagination2">
+                                    <!-- Các liên kết phân trang sẽ được thêm vào đây -->
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                        <button type="button" id="addButton" class="btn btn-success">Thêm</button>
+                        <button type="button" id="updateButton" class="btn btn-warning">Cập nhật</button>
+                        <button type="button" id="resetButton" class="btn btn-danger">Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--modal hình ảnh -->
+    <div class="modal fade" id="addHinhAnhModal" tabindex="-1" role="dialog" aria-labelledby="addHinhAnhModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg2" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addHinhAnhModalLabel">Thêm Hình Ảnh</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Form thêm hình ảnh -->
+                    <form id="add-image-form">
+                        <div class="form-group">
+                            <label for="duongDanSuffix">Đường Dẫn Hình Ảnh</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">img2/</span>
+                                </div>
+                                <input type="file" class="form-control" id="duongDanSuffix" name="duongDanSuffix"
+                                       required>
+                                <input type="text" class="form-control" id="idHinhAnhSufix" name="idHinhAnhSufix" required>
+                            </div>
+                        </div>
+                    </form>
+                    <!-- Table Hình Ảnh -->
+                    <table id="hinhAnhTable" class="table table-striped table-bordered">
+                        <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên</th>
+                            <th>Ngày Tạo</th>
+
+
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- Thêm các hàng của bảng tại đây -->
+
+                        </tbody>
+                    </table>
+                    <!-- /Table Hình Ảnh -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary" id="addButtonHinhAnh">Thêm</button>
+                    <button type="button" class="btn btn-warning" id="updateButtonHinhAnh">Cập nhật</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="addDanhModal" tabindex="-1" role="dialog" aria-labelledby="addHinhAnhModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg3" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addDanhMucModalLabel">Thêm Danh Mục</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Form thêm hình ảnh -->
+                    <form id="add-danhMuc-form">
+                        <div class="form-group">
+                            <label>Tên Danh Mục</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="DanhMucSufix" name="DanhMucSufix" required>
+                            </div>
+                        </div>
+                        <input type="hidden" class="form-control" id="danhMucId" name="danhMucId" required>
+                    </form>
+                    <!-- Table Hình Ảnh -->
+                    <table id="danhMucTable" class="table table-striped table-bordered">
+                        <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên</th>
+                            <th>Ngày Tạo</th>
+                            <th>Chọn</th>
+
+
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                    <!-- /Table Hình Ảnh -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary" id="addButtonDanhMuc">Thêm</button>
+                    <button type="button" class="btn btn-warning" id="updateButtonDanhMuc">Cập nhật</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addMauSacModal" tabindex="-1" role="dialog" aria-labelledby="addMauSacModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg4" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addMauSacModalLabel">Thêm Mau Sac</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Form thêm hình ảnh -->
+                    <form id="add-MauSac-form">
+                        <div class="form-group">
+                            <label>Tên Danh Mục</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="MauSacSufix" name="MauSacSufix" required>
+                            </div>
+                        </div>
+                        <input type="hidden" class="form-control" id="MauSacId" name="MauSacId" required>
+                    </form>
+                    <!-- Table Hình Ảnh -->
+                    <table id="mauSacTable" class="table table-striped table-bordered">
+                        <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên</th>
+                            <th>Ngày Tạo</th>
+                            <th>Chọn</th>
+
+
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary" id="addButtonMauSac">Thêm</button>
+                    <button type="button" class="btn btn-warning" id="updateButtonMauSac">Cập nhật</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="addChatLieuModal" tabindex="-1" role="dialog" aria-labelledby="addMauSacModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg4" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addChatLieuModalLabel">Thêm Mau Sac</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Form thêm hình ảnh -->
+                    <form id="add-ChatLieu-form">
+                        <div class="form-group">
+                            <label>Tên Chat Lieu </label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="ChatLieuSufix" name="ChatLieuSufix"
+                                       required>
+                            </div>
+                        </div>
+                        <input type="hidden" class="form-control" id="ChatLieuId" name="ChatLieuId" required>
+                    </form>
+                    <!-- Table Hình Ảnh -->
+                    <table id="chatLieuTable" class="table table-striped table-bordered">
+                        <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên</th>
+                            <th>Ngày Tạo</th>
+                            <th>Chọn</th>
+
+
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary" id="addButtonChatLieu">Thêm</button>
+                    <button type="button" class="btn btn-warning" id="updateButtonChatLieu">Cập nhật</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="addKichCoModal" tabindex="-1" role="dialog" aria-labelledby="addMauSacModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg5" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addKichCoModalLabel">Thêm Kích Cỡ</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Form thêm hình ảnh -->
+                    <form id="add-KichCo-form">
+                        <div class="form-group">
+                            <label>Tên Kich Cỡ </label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="KichCoSufix" name="KichCoSufix" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Độ Dài </label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="DoDaiSufix" name="DoDaiSufix" required>
+                            </div>
+                        </div>
+                        <input type="hidden" class="form-control" id="KichCoId" name="KichCoId" required>
+                    </form>
+                    <!-- Table Hình Ảnh -->
+                    <table id="kichCoTable" class="table table-striped table-bordered">
+                        <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên</th>
+                            <th>Độ Dài</th>
+                            <th>Ngày Tạo</th>
+                            <th>Chọn</th>
+
+
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary" id="addButtonKichCo">Thêm</button>
+                    <button type="button" class="btn btn-warning" id="updateButtonKichCo">Cập nhật</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- /Modal -->
+
+    <!-- footer -->
+    <div th:replace="~{admin/common/foodter.html}"></div>
+    <th:block th:replace="jsImport.html :: layout_import_js"/>
+    <!-- footer -->
+    <a href="#" id="btn-scroll-up" class="btn-scroll-up btn btn-sm btn-inverse display">
+        <i class="ace-icon fa fa-angle-double-up icon-only bigger-110"></i>
+    </a>
+
+
+</body>
+<script>
+    $(document).ready(function () {
+        // Hàm gọi API để lấy tất cả hình ảnh và cập nhật bảng
+        function loadAllImages() {
+            $.ajax({
+                url: '/api/hinhanh/getAll',
+                method: 'GET',
+                success: function (data) {
+                    console.log(data); // Kiểm tra dữ liệu trả về
+
+                    // Kiểm tra nếu data là một mảng
+                    if (Array.isArray(data)) {
+                        let hinhAnhTable = $('#hinhAnhTable tbody');
+                        hinhAnhTable.empty();
+
+                        // Duyệt qua từng phần tử trong mảng và tạo hàng bảng
+                        $.each(data, function (index, product) {
+                            let row = `<tr>
+                            <td>${index + 1}</td>
+                            <td><img src="${product.duongDan}" alt="Hình ảnh" style="width: 50px; height: 50px;"></td>
+                            <td>${product.createDate}</td>
+                            <td><input type="checkbox" class="product-checkbox" data-id="${product.id}" data-name="${product.duongDan}"></td>
+                        </tr>`;
+                            hinhAnhTable.append(row);
+                        });
+                        $('.product-checkbox').on('click', function () {
+                            $('.product-checkbox').not(this).prop('checked', false);
+                            if ($(this).is(':checked')) {
+                                $('#idHinhAnhSufix').val($(this).data('id'));
+                                $('#duongDanSuffix').val($(this).data('name'));
+                            } else {
+                                $('#idHinhAnhSufix').val('');
+                                $('#duongDanSuffix').val('');
+                            }
+                        });
+
+                        // Cập nhật ô select hình ảnh
+                        updateSelectHinhAnh(data);
+                    } else {
+                        console.error('Dữ liệu không phải là mảng:', data);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+                }
+            });
+        }
+
+        // Hàm cập nhật ô select hình ảnh
+        function updateSelectHinhAnh(data) {
+            let hinhAnhSelect = $('#hinhAnh');
+            hinhAnhSelect.empty();
+
+            // Thêm các tùy chọn mới vào select hình ảnh
+            $.each(data, function (index, item) {
+                hinhAnhSelect.append($('<option>', {
+                    value: item.id, // ID của hình ảnh
+                    text: item.duongDan, // Văn bản hiển thị
+                    'data-image': item.duongDan // Đường dẫn hình ảnh
+                }));
+            });
+
+            // Thêm sự kiện thay đổi cho ô select
+            hinhAnhSelect.off('change').on('change', function () {
+                var selectedImagePath = $(this).find(':selected').data('image');
+                if (selectedImagePath) {
+                    $('#selectedImage').attr('src', selectedImagePath).show();
+                } else {
+                    $('#selectedImage').hide();
+                }
+            });
+        }
+
+        function updateSelectDanhMuc(data) {
+            let danhMucSelect = $('#danhMuc');
+            danhMucSelect.empty(); // Xóa các tùy chọn cũ trước khi thêm mới
+
+            $.each(data, function (index, item) {
+                danhMucSelect.append($('<option>', {
+                    value: item.id,
+                    text: item.tenDanhMuc
+                }));
+            });
+        }
+
+        function updateSelectMauSac(data) {
+            let mauSacSelect = $('#mauSac');
+            mauSacSelect.empty(); // Xóa các tùy chọn cũ trước khi thêm mới
+            $.each(data, function (index, item) {
+                mauSacSelect.append($('<option>', {
+                    value: item.id,
+                    text: item.ten
+                }));
+            });
+        }
+
+        function updateSelectChatLieu(data) {
+            let chatLieuSelect = $('#chatLieu');
+            chatLieuSelect.empty();
+            $.each(data, function (index, item) {
+                $('#chatLieu').append($('<option>', {
+                    value: item.id,
+                    text: item.ten
+                }));
+            });
+        }
+
+        function updateSelectKichCo(data) {
+            let kichCoSelect = $('#kichCo');
+            kichCoSelect.empty();
+
+            $.each(data, function (index, item) {
+                $('#kichCo').append($('<option>', {
+                    value: item.id,
+                    text: item.tenKichCo
+                }));
+            });
+        }
+
+        function loadDanhMuc() {
+            $.ajax({
+                url: '/api/danhmuc/getAll',
+                method: 'GET',
+                success: function (data) {
+                    console.log(data); // Kiểm tra dữ liệu trả về
+
+                    // Kiểm tra nếu data là một mảng
+                    if (Array.isArray(data)) {
+                        let danhMucTable = $('#danhMucTable tbody');
+                        danhMucTable.empty();
+
+                        // Duyệt qua từng phần tử trong mảng và tạo hàng bảng
+                        $.each(data, function (index, product) {
+                            let row = `<tr>
+                            <td>${index + 1}</td>
+                            <td>${product.tenDanhMuc}</td>
+                            <td>${product.createDate}</td>
+                            <td><input type="checkbox" class="danhmuc-checkbox"
+                             data-id="${product.id}" data-name="${product.tenDanhMuc}" data-status="${product.trangThai}"></td>
+                        </tr>`;
+                            danhMucTable.append(row);
+                        });
+
+                        // Thêm sự kiện thay đổi cho checkbox
+                        $('.danhmuc-checkbox').on('click', function () {
+                            $('.danhmuc-checkbox').not(this).prop('checked', false);
+                            if ($(this).is(':checked')) {
+                                $('#danhMucId').val($(this).data('id'));
+                                $('#DanhMucSufix').val($(this).data('name'));
+                            } else {
+                                $('#danhMucId').val('');
+                                $('#DanhMucSufix').val('');
+                            }
+                        });
+
+                        // Cập nhật ô select danh mục
+                        updateSelectDanhMuc(data);
+                    } else {
+                        console.error('Dữ liệu không phải là mảng:', data);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+                }
+            });
+        }
+
+        function loadMauSac() {
+            $.ajax({
+                url: '/api/mausac/getAll',
+                method: 'GET',
+                success: function (data) {
+                    console.log(data); // Kiểm tra dữ liệu trả về
+
+                    // Kiểm tra nếu data là một mảng
+                    if (Array.isArray(data)) {
+                        let mauSacTable = $('#mauSacTable tbody');
+                        mauSacTable.empty();
+
+                        // Duyệt qua từng phần tử trong mảng và tạo hàng bảng
+                        $.each(data, function (index, product) {
+                            let row = `<tr>
+                            <td>${index + 1}</td>
+                            <td>${product.ten}</td>
+                            <td>${product.createDate}</td>
+                            <td><input type="checkbox" class="mausac-checkbox"
+                             data-id="${product.id}" data-name="${product.ten}" data-status="${product.trangThai}"></td>
+                        </tr>`;
+                            mauSacTable.append(row);
+                        });
+
+                        // Thêm sự kiện thay đổi cho checkbox
+                        $('.mausac-checkbox').on('click', function () {
+                            $('.mausac-checkbox').not(this).prop('checked', false);
+                            if ($(this).is(':checked')) {
+                                $('#MauSacId').val($(this).data('id'));
+                                $('#MauSacSufix').val($(this).data('name'));
+                            } else {
+                                $('#MauSacId').val('');
+                                $('#MauSacSufix').val('');
+                            }
+                        });
+
+                        // Cập nhật ô select danh mục
+                        updateSelectMauSac(data);
+                    } else {
+                        console.error('Dữ liệu không phải là mảng:', data);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+                }
+            });
+        }
+
+        function loadChatLieu() {
+            $.ajax({
+                url: '/api/chatlieu/getAll',
+                method: 'GET',
+                success: function (data) {
+                    console.log(data); // Kiểm tra dữ liệu trả về
+
+                    // Kiểm tra nếu data là một mảng
+                    if (Array.isArray(data)) {
+                        let chatLieuTable = $('#chatLieuTable tbody');
+                        chatLieuTable.empty();
+
+                        // Duyệt qua từng phần tử trong mảng và tạo hàng bảng
+                        $.each(data, function (index, product) {
+                            let row = `<tr>
+                            <td>${index + 1}</td>
+                            <td>${product.ten}</td>
+                            <td>${product.createDate}</td>
+                            <td><input type="checkbox" class="chatLieu-checkbox"
+                             data-id="${product.id}" data-name="${product.ten}" data-status="${product.trangThai}"></td>
+                        </tr>`;
+                            chatLieuTable.append(row);
+                        });
+
+                        // Thêm sự kiện thay đổi cho checkbox
+                        $('.chatLieu-checkbox').on('click', function () {
+                            $('.chatLieu-checkbox').not(this).prop('checked', false);
+                            if ($(this).is(':checked')) {
+                                $('#ChatLieuId').val($(this).data('id'));
+                                $('#ChatLieuSufix').val($(this).data('name'));
+                            } else {
+                                $('#ChatLieuId').val('');
+                                $('#ChatLieuSufix').val('');
+                            }
+                        });
+                        updateSelectChatLieu(data);
+
+                        // Cập nhật ô select danh mục
+                        // updateSelectMauSac(data);
+                    } else {
+                        console.error('Dữ liệu không phải là mảng:', data);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+                }
+            });
+        }
+
+        function loadKichCo() {
+            $.ajax({
+                url: '/api/kichco/getAll',
+                method: 'GET',
+                success: function (data) {
+                    console.log(data); // Kiểm tra dữ liệu trả về
+
+                    // Kiểm tra nếu data là một mảng
+                    if (Array.isArray(data)) {
+                        let kichCoTable = $('#kichCoTable tbody');
+                        kichCoTable.empty();
+
+                        // Duyệt qua từng phần tử trong mảng và tạo hàng bảng
+                        $.each(data, function (index, product) {
+                            let row = `<tr>
+                            <td>${index + 1}</td>
+                            <td>${product.tenKichCo}</td>
+                            <td>${product.doDai}</td>
+                            <td>${product.createDate}</td>
+                            <td><input type="checkbox" class="kichco-checkbox"
+                             data-id="${product.id}" data-name="${product.tenKichCo}" data-status="${product.trangThai}" data-dodai="${product.doDai}"></td>
+                        </tr>`;
+                            kichCoTable.append(row);
+                        });
+
+                        // Thêm sự kiện thay đổi cho checkbox
+                        $('.kichco-checkbox').on('click', function () {
+                            $('.kichco-checkbox').not(this).prop('checked', false);
+                            if ($(this).is(':checked')) {
+                                $('#KichCoId').val($(this).data('id'));
+                                $('#KichCoSufix').val($(this).data('name'));
+                                $('#DoDaiSufix').val($(this).data('dodai'));
+                            } else {
+                                $('#KichCoId').val('');
+                                $('#KichCoSufix').val('');
+                                $('#DoDaiSufix').val('');
+                            }
+                        });
+
+                        // Cập nhật ô select danh mục
+                        updateSelectKichCo(data);
+                    } else {
+                        console.error('Dữ liệu không phải là mảng:', data);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+                }
+            });
+        }
+
+
+        $('#addButtonDanhMuc').click(function () {
+            let tenDanhMuc = $('#DanhMucSufix').val();
+          if(tenDanhMuc ===''){
+              alert("bạn không để trống tên danh mục")
+              return;
+          }
+            let DanhMucDTO = {
+                tenDanhMuc: tenDanhMuc
+            };
+
+            $.ajax({
+                url: '/api/danhmuc/add',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(DanhMucDTO),
+                success: function (response) {
+                    alert('Danh mục đã được thêm thành công!');
+                    loadDanhMuc();
+
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+                    alert('Đã xảy ra lỗi khi thêm danh mục.');
+                }
+            });
+        });
+
+        $('#updateButtonDanhMuc').click(function () {
+            let tenDanhMuc = $('#DanhMucSufix').val();
+            let idDM = $('#danhMucId').val();
+            if(tenDanhMuc ===''||idDM ===''){
+                alert("bạn không để trống tên danh mục")
+                return;
+            }
+
+            let DanhMucDTO = {
+                id: idDM,
+                tenDanhMuc: tenDanhMuc
+            };
+
+            $.ajax({
+                url: '/api/danhmuc/update',
+                method: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify(DanhMucDTO),
+                success: function (response) {
+                    alert('Danh mục đã cập nhật thành công!');
+                    loadDanhMuc();
+
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+                    alert('Đã xảy ra lỗi khi cập nhật danh mục.');
+                }
+            });
+        });
+        $('#addButtonMauSac').click(function () {
+            let tenMauSac = $('#MauSacSufix').val();
+            if(tenMauSac ===''){
+                alert("bạn không để trống  màu sắc")
+                return;
+            }
+            let DanhMucDTO = {
+                ten: tenMauSac
+            };
+
+            $.ajax({
+                url: '/api/mausac/add',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(DanhMucDTO),
+                success: function (response) {
+                    alert('Màu Sắc đã được thêm thành công!');
+                    loadMauSac();
+
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+                    alert('Đã xảy ra lỗi khi thêm màu sắc.');
+                }
+            });
+        });
+        $('#updateButtonMauSac').click(function () {
+
+            let tenMauSac = $('#MauSacSufix').val();
+            let id = $('#MauSacId').val();
+            if(tenMauSac ===''||id ===''){
+                alert("bạn không để trống tên mau sắc")
+                return;
+            }
+            let DanhMucDTO = {
+                id:id,
+                ten: tenMauSac
+            };
+
+            $.ajax({
+                url: '/api/mausac/update',
+                method: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify(DanhMucDTO),
+                success: function (response) {
+                    alert('Màu Sắc đã được Cập Nhật thành công!');
+                    loadMauSac();
+
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+                    alert('Đã xảy ra lỗi khi thêm màu sắc.');
+                }
+            });
+        });
+        $('#addButtonChatLieu').click(function () {
+            let tenChatLieu = $('#ChatLieuSufix').val();
+            if(tenChatLieu===''){
+                alert("Bạn không được để trống");
+                return
+            }
+            let DanhMucDTO = {
+                ten: tenChatLieu
+
+            };
+
+            $.ajax({
+                url: '/api/chatlieu/add',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(DanhMucDTO),
+                success: function (response) {
+                    alert('Chất Liệu đã thêm Cập Nhật thành công!');
+                    loadChatLieu();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+                    alert('Đã xảy ra lỗi khi thêm mauSac.');
+                }
+            });
+        });
+        $('#updateButtonChatLieu').click(function () {
+            let tenChatLieu = $('#ChatLieuSufix').val();
+            let id = $('#ChatLieuId').val();
+            if(tenChatLieu===''||id ===''){
+                alert("Bạn không được để trống");
+                return
+            }
+            let DanhMucDTO = {
+                ten: tenChatLieu,
+                id: id
+
+            };
+
+            $.ajax({
+                url: '/api/chatlieu/update',
+                method: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify(DanhMucDTO),
+                success: function (response) {
+                    alert('Chất Liệu đã thêm Cập Nhật thành công!');
+                    loadChatLieu();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+                    alert('Đã xảy ra lỗi khi thêm mauSac.');
+                }
+            });
+        });
+        $('#addButtonKichCo').click(function () {
+            let tenKichCo = $('#KichCoSufix').val();
+            let doDai = $('#DoDaiSufix').val();
+    if(tenKichCo ===''||doDai===''){
+        alert("Bạn không được để trống");
+        return
+    }
+            let DanhMucDTO = {
+                tenKichCo: tenKichCo,
+                doDai: doDai
+
+            };
+
+            $.ajax({
+                url: '/api/kichco/add',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(DanhMucDTO),
+                success: function (response) {
+                    alert('Kích cỡ đã thêm  thành công!');
+                    loadKichCo();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+                    alert('Đã xảy ra lỗi khi thêm mauSac.');
+                }
+            });
+        });
+        $('#updateButtonKichCo').click(function () {
+            let id = $('#KichCoId').val();
+            let tenKichCo = $('#KichCoSufix').val();
+            let doDai = $('#DoDaiSufix').val();
+            if(tenKichCo ===''||doDai===''|| id ===''){
+                alert("Bạn không được để trống");
+                return
+            }
+            let DanhMucDTO = {
+                id: id,
+                tenKichCo: tenKichCo,
+                doDai: doDai
+
+            };
+
+            $.ajax({
+                url: '/api/kichco/update',
+                method: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify(DanhMucDTO),
+                success: function (response) {
+                    alert('Kích cỡ đã cập nhật  thành công!');
+                    loadKichCo();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+                    alert('Đã xảy ra lỗi khi thêm kích cỡ.');
+                }
+            });
+        });
+        loadAllImages();
+        loadDanhMuc();
+        loadMauSac();
+        loadChatLieu();
+        loadKichCo();
+
+        $('#addButtonHinhAnh').click(function () {
+            let fileInput = $('#duongDanSuffix');
+            let filePath = fileInput.val();
+            let fileName = filePath.split('\\').pop().split('/').pop();
+            let duongDan = `img2/${fileName}`;
+
+            let hinhAnhDTO = {
+                duongDan: duongDan
+            };
+
+            $.ajax({
+                url: '/api/hinhanh/add',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(hinhAnhDTO),
+                success: function (response) {
+                    alert('Hình ảnh đã được thêm thành công!');
+                    loadAllImages();
+                    $('#idHinhAnhSufix').val('');
+                    $('#duongDanSuffix').val('');
+
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+                    alert('Đã xảy ra lỗi khi thêm hình ảnh.');
+                }
+            });
+        });
+        $('#updateButtonHinhAnh').click(function () {
+            let fileInput = $('#duongDanSuffix');
+            let filePath = fileInput.val();
+            let fileName = filePath.split('\\').pop().split('/').pop();
+            let duongDan = `img2/${fileName}`;
+            let id = $('#idHinhAnhSufix').val()
+
+            let hinhAnhDTO = {
+                id:id,
+                duongDan: duongDan,
+            };
+
+            $.ajax({
+                url: '/api/hinhanh/update',
+                method: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify(hinhAnhDTO),
+                success: function (response) {
+                    alert('Hình ảnh đã được cập nhật  thành công!');
+                    loadAllImages();
+                    $('#idHinhAnhSufix').val('');
+                    $('#duongDanSuffix').val('');
+
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+                    alert('Đã xảy ra lỗi khi cập nhật hình ảnh.');
+                }
+            });
+        });
+    });
+
+
+    // Cập nhật checkbox trạng thái sản phẩm
+    $('#active-product').on('change', function () {
+        if (this.checked) {
+            $('#inactive-product').prop('checked', false);
+        }
+    });
+
+    $('#inactive-product').on('change', function () {
+        if (this.checked) {
+            $('#active-product').prop('checked', false);
+        }
+    });
+    $('#active-product2').on('change', function () {
+        if (this.checked) {
+            $('#inactive-product2').prop('checked', false);
+        }
+    });
+
+    $('#inactive-product2').on('change', function () {
+        if (this.checked) {
+            $('#active-product2').prop('checked', false);
+        }
+    });
+
+    // Gọi API để lấy danh mục và cập nhật ô select
+    $.ajax({
+        url: '/api/danhmuc/getAll',
+        method: 'GET',
+        success: function (data) {
+            $('#danhMuc').empty();
+
+            updateSelectDanhMuc(data);
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+        }
+    });
+
+    // Gọi API để lấy màu sắc và cập nhật ô select
+    $.ajax({
+        url: '/api/mausac/getAll',
+        method: 'GET',
+        success: function (data) {
+            $('#mauSac').empty();
+
+            updateSelectMauSac(data);
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+        }
+    });
+
+    // Gọi API để lấy NSX và cập nhật ô select
+    $.ajax({
+        url: '/api/nsx/getAll',
+        method: 'GET',
+        success: function (data) {
+            $('#nsx').empty();
+
+            $.each(data, function (index, item) {
+                $('#nsx').append($('<option>', {
+                    value: item.id,
+                    text: item.ten
+                }));
+            });
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+        }
+    });
+
+    // Gọi API để lấy kích cỡ và cập nhật ô select
+    $.ajax({
+        url: '/api/kichco/getAll',
+        method: 'GET',
+        success: function (data) {
+            $('#kichCo').empty();
+
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+        }
+    });
+
+    // Gọi API để lấy chất liệu và cập nhật ô select
+    $.ajax({
+        url: '/api/chatlieu/getAll',
+        method: 'GET',
+        success: function (data) {
+            $('#chatLieu').empty();
+
+
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+        }
+    });
+
+    // Gọi API để lấy hình ảnh và cập nhật ô select
+    $.ajax({
+        url: '/api/hinhanh/getAll',
+        method: 'GET',
+        success: function (data) {
+            updateSelectHinhAnh(data);
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            console.error('Lỗi khi gọi API: ', textStatus, errorThrown);
+        }
+    });
+
+    $(document).ready(function () {
+        let currentPage = 0;
+        let pageSize = 4;
+        let keySearch = 1;
+        // Thay đổi trạng thái tìm kiếm
+        $('#trangThai').on('change', function () {
+            currentPage = 0;
+            keySearch = $(this).val();
+            loadProducts(currentPage);
+        });
+
+        loadProducts(currentPage);
+
+        function loadProducts(pageNo) {
+            let url2 = `/api/sp?pageNo=${pageNo}&pageSize=${pageSize}`;
+            if (keySearch) {
+
+                url2 += `&trangThai=${keySearch}`;
+            }
+
+            $.ajax({
+                url: url2,
+                type: 'GET',
+                dataType: 'json',
+                success: function (response) {
+                    let products = response.content;
+                    let productTable = $('#productTable');
+                    productTable.empty(); // Xóa các hàng hiện tại
+                    $.each(products, function (index, product) {
+                        let trangThai = product.trangThai === 1 ? "Đang kinh doanh" : "Ngừng kinh doanh";
+                        let row = `<tr>
+                        <td>${product.tenSanPham}</td>
+                        <td>${product.createDate}</td>
+                        <td>${trangThai}</td>
+                        <td><input type="checkbox" class="product-checkbox" data-id="${product.id}" data-name="${product.tenSanPham}" data-status="${product.trangThai}"></td>
+                    </tr>`;
+                        productTable.append(row);
+                    });
+                    setupPagination(response);
+
+                    // Thêm sự kiện click cho các ô checkbox
+                    $('.product-checkbox').on('click', function () {
+                        $('.product-checkbox').not(this).prop('checked', false);
+                        if ($(this).is(':checked')) {
+                            $('#code-product').val($(this).data('id'));
+                            $('#name-product').val($(this).data('name'));
+                            if ($(this).data('status') === 1) {
+                                $('#active-product').prop('checked', true);
+                                $('#inactive-product').prop('checked', false);
+                            } else {
+                                $('#active-product').prop('checked', false);
+                                $('#inactive-product').prop('checked', true);
+                            }
+                        } else {
+                            $('#code-product').val('');
+                            $('#name-product').val('');
+                            $('#active-product').prop('checked', false);
+                            $('#inactive-product').prop('checked', false);
+                        }
+                    });
+                },
+                error: function (error) {
+                    console.log('Error:', error);
+                }
+            });
+        }
+
+        $('#thanhToanModal').on('hidden.bs.modal', function () {
+            loadProducts(currentPage);
+        });
+
+        function setupPagination(response) {
+            let totalPages = response.totalPages;
+            let currentPage = response.number;
+            let pagination = $('#pagination');
+            pagination.empty();
+
+            if (totalPages > 1) {
+                if (currentPage > 0) {
+                    pagination.append(`<li class="page-item"><a class="page-link" href="#" data-page="${currentPage - 1}">Previous</a></li>`);
+                }
+                for (let i = 0; i < totalPages; i++) {
+                    let activeClass = (i === currentPage) ? 'active' : '';
+                    pagination.append(`<li class="page-item ${activeClass}"><a class="page-link" href="#" data-page="${i}">${i + 1}</a></li>`);
+                }
+                if (currentPage < totalPages - 1) {
+                    pagination.append(`<li class="page-item"><a class="page-link" href="#" data-page="${currentPage + 1}">Next</a></li>`);
+                }
+            }
+
+            $('.page-link').on('click', function (event) {
+                event.preventDefault();
+                let page = $(this).data('page');
+                loadProducts(page);
+            });
+        }
+
+        $('#btn-update').on('click', function () {
+            let sanPhamDTO = {
+                tenSanPham: $('#name-product').val(),
+                id: $('#code-product').val(),
+                trangThai: $('#active-product').is(':checked') ? 1 : 0
+            };
+            if($('#code-product').val()=='' || $('#name-product').val()==''){
+                alert('Bạn Không Được Để Trống');
+                return;
+            }
+
+
+            $.ajax({
+                url: '/api/sp',
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify(sanPhamDTO),
+                success: function (response) {
+                    alert('Cập Nhật Sản Phẩm Thành Công!');
+                    currentPage = 0;
+                    loadProducts(currentPage);
+                    $('#name-product').val('');
+                    $('#code-product').val('');
+                },
+                error: function (error) {
+                    console.log('Error:', error);
+                    alert('Đã xảy ra lỗi khi Cập Nhật sản phẩm.');
+                }
+            });
+        });
+        $('#btn-add').on('click', function () {
+            let sanPhamDTO = {
+                tenSanPham: $('#name-product').val(),
+                trangThai: $('#active-product').is(':checked') ? 1 : 0
+            };
+            if( $('#name-product').val()==''){
+                alert('Bạn Không Được Để Trống');
+                return;
+            }
+            if (!$('#active-product').is(':checked')) {
+                alert('Bạn phải chọn trạng thái của sản phẩm.');
+                return;
+            }
+            $.ajax({
+                url: '/api/sp',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(sanPhamDTO),
+                success: function (response) {
+                    alert('Sản phẩm đã được thêm thành công!');
+                    loadProducts(currentPage);
+                    $('#name-product').val('');
+                    $('#code-product').val('');
+                },
+                error: function (error) {
+                    console.log('Error:', error);
+                    alert('Đã xảy ra lỗi khi thêm sản phẩm.');
+                }
+            });
+        });
+
+
+    });
+
+    let currentPage2 = 0;
+    const pageSize2 = 3;
+    let totalPages2 = 0;
+    let keySearch = '1';
+
+    // Hàm cập nhật giao diện phân trang
+    function updatePagination2(totalPages2) {
+        let pagination = $('#pagination2');
+        pagination.empty();
+
+        for (let i = 0; i < totalPages2; i++) {
+            let pageItem = `<li class="page-item ${i === currentPage2 ? 'active' : ''}">
+                        <a class="page-link" href="#" data-page="${i}">${i + 1}</a>
+                    </li>`;
+            pagination.append(pageItem);
+        }
+
+        // Thêm sự kiện thay đổi trang cho các nút phân trang
+        $('.page-link').on('click', function (e) {
+            e.preventDefault();
+            currentPage2 = $(this).data('page');
+            loadProductCT($('#code-product').val());
+        });
+    }
+
+    // Hàm tải sản phẩm chi tiết
+    function loadProductCT(idSp) {
+        if (!idSp) {
+            alert('Vui lòng chọn sản phẩm.');
+            return;
+        }
+
+        let url2 = `/api/SPCT/idSP?idSP=${idSp}&pageNo=${currentPage2}&pageSize=${pageSize2}&trangThai=${keySearch}`;
+        $.ajax({
+            url: url2,
+            type: 'GET',
+            success: function (response) {
+                let products = response.content;
+                let cartTable = $('#cart2 tbody');
+                cartTable.empty();
+                $.each(products, function (index, product) {
+                    let trangThai = product.trangThai === 1 ? "Đang kinh doanh" : "Ngừng kinh doanh";
+                    let row = `<tr>
+                <td>${product.sanPham.tenSanPham}</td>
+                <td>${product.giaSanPham}</td>
+                <td>${product.soLuong}</td>
+                <td>${product.mauSac.ten}</td>
+                <td>${product.kichCo.tenKichCo}</td>
+                <td>${product.nsx.ten}</td>
+                <td>${product.danhMuc.tenDanhMuc}</td>
+                <td>${product.chatLieu.ten}</td>
+                <td>${product.moTa}</td>
+                <td>${product.trongLuong}</td>
+                <td><img src="${product.hinhAnh.duongDan}" alt="Hình ảnh sản phẩm" style="max-width: 100px; max-height: 100px;"></td>
+                   <td>${trangThai}</td>
+                <td><input type="checkbox" class="product2-checkbox" data-id="${product.id}" data-gia="${product.giaSanPham}" data-soLuong="${product.soLuong}"
+                data-trongLuong="${product.trongLuong}" data-mauSac="${product.mauSac.id}"
+                 data-kichCo="${product.kichCo.id}" data-nsx="${product.nsx.id}" data-chatLieu="${product.chatLieu.id}"
+                 data-moTa="${product.moTa}" data-hinhAnh="${product.hinhAnh.duongDan}" data-trangthai="${product.trangThai}"></td>
+            </tr>`;
+                    cartTable.append(row);
+                });
+
+                totalPages2 = response.totalPages;
+                updatePagination2(totalPages2);
+
+                // Thêm sự kiện thay đổi cho các checkbox
+                $('.product2-checkbox').on('change', function () {
+                    if (this.checked) {
+                        $('.product2-checkbox').not(this).prop('checked', false);
+
+                        let giaSanPham = $(this).data('gia');
+                        let soLuong = $(this).data('soluong');
+                        let trongLuong = $(this).data('trongluong');
+                        let mauSac = $(this).data('mausac');
+                        let kichCo = $(this).data('kichco');
+                        let nsx = $(this).data('nsx');
+                        let chatLieu = $(this).data('chatlieu');
+                        let moTa = $(this).data('mota');
+                        let hinhAnh = $(this).data('hinhanh');
+
+                        $('#idspct').val($(this).data('id'));
+                        $('#giaSanPham').val(giaSanPham);
+                        $('#soLuong').val(soLuong);
+                        $('#trongLuong').val(trongLuong);
+                        setSelectValue('#mauSac', mauSac);
+                        setSelectValue('#kichCo', kichCo);
+                        setSelectValue('#nsx', nsx);
+                        setSelectValue('#chatLieu', chatLieu);
+                        $('#moTa').val(moTa);
+                        $('#selectedImage').attr('src', hinhAnh).show();
+                        if ($(this).data('trangthai') === 1) {
+                            $('#active-product2').prop('checked', true);
+                            $('#inactive-product2').prop('checked', false);
+                        } else {
+                            $('#active-product2').prop('checked', false);
+                            $('#inactive-product2').prop('checked', true);
+                        }
+                    } else {
+                        $('#giaSanPham').val('');
+                        $('#soLuong').val('');
+                        $('#moTa').val('');
+                        $('#trongLuong').val('');
+                        $('#active-product2').prop('checked', false);
+                        $('#inactive-product2').prop('checked', false);
+                    }
+                });
+
+
+                $('#thanhToanModal').modal('show')
+                $('#themKichCo').on('click', function () {
+                    $('#addKichCoModal').modal('show');
+                });
+                $('#themMauSac').on('click', function () {
+                    $('#addMauSacModal').modal('show');
+                });
+                $('#themChatLieu').on('click', function () {
+                    $('#addChatLieuModal').modal('show');
+                });
+                $('#ThemHinhAnh').on('click', function () {
+                    console.log('Hinh Ảnh Modal'); // Kiểm tra sự kiện click của nút thanh toán
+                    $('#addHinhAnhModal').modal('show');
+                });
+                $('#ThemDanhMuc').on('click', function () {
+                    console.log('Hinh Ảnh Modal'); // Kiểm tra sự kiện click của nút thanh toán
+                    $('#addDanhModal').modal('show');
+                });
+                $('#addHinhAnhModal').on('hidden.bs.modal', function () {
+                    $('body').css('overflow', 'auto');
+                    $('#thanhToanModal').css('overflow-y', 'auto'); // Thiết lập lại cuộn cho modal chính
+                });
+                $('#addDanhModal').on('hidden.bs.modal', function () {
+                    $('body').css('overflow', 'auto');
+                    $('#thanhToanModal').css('overflow-y', 'auto'); // Thiết lập lại cuộn cho modal chính
+                });
+                $('#addMauSacModal').on('hidden.bs.modal', function () {
+                    $('body').css('overflow', 'auto');
+                    $('#thanhToanModal').css('overflow-y', 'auto'); // Thiết lập lại cuộn cho modal chính
+                })
+                $('#addChatLieuModal').on('hidden.bs.modal', function () {
+                    $('body').css('overflow', 'auto');
+                    $('#thanhToanModal').css('overflow-y', 'auto'); // Thiết lập lại cuộn cho modal chính
+                })
+                $('#addKichCoModal').on('hidden.bs.modal', function () {
+                    $('body').css('overflow', 'auto');
+                    $('#thanhToanModal').css('overflow-y', 'auto'); // Thiết lập lại cuộn cho modal chính
+                })
+            },
+            error: function (error) {
+                console.log('Error:', error);
+            }
+        });
+    }
+
+    // Hàm để thiết lập giá trị cho select và thêm tùy chọn nếu cần thiết
+    function setSelectValue(selectSelector, value) {
+        let select = $(selectSelector);
+        if (select.find(`option[value="${value}"]`).length === 0) {
+            select.append(`<option value="${value}">${value}</option>`);
+        }
+        select.val(value);
+    }
+
+    $(document).ready(function () {
+        $('#btn-view').on('click', function () {
+            let idSp = $('#code-product').val();
+            loadProductCT(idSp);
+        });
+
+        // Thay đổi trạng thái tìm kiếm
+        $('#trangThai2').on('change', function () {
+            keySearch = $(this).val();
+            loadProductCT($('#code-product').val());
+        });
+
+        $('#addButton').click(function () {
+            var sanPhamChiTiet = {
+                giaSanPham: $('#giaSanPham').val(),
+                gioiTinh: $('#gioiTinh').val(),
+                sanPham: $('#code-product').val(),
+                soLuong: $('#soLuong').val(),
+                trongLuong: $('#trongLuong').val(),
+                danhMuc: $('#danhMuc').val(),
+                hinhAnh: $('#hinhAnh').val(),
+                kichCo: $('#kichCo').val(),
+                nsx: $('#nsx').val(),
+                mauSac: $('#mauSac').val(),
+                chatLieu: $('#chatLieu').val(),
+                moTa: $('#moTa').val(),
+                trangThai: $('#active-product2').is(':checked') ? 1 : 0
+            };
+            if (!sanPhamChiTiet.giaSanPham || !sanPhamChiTiet.soLuong ||!sanPhamChiTiet.trongLuong
+                ||!sanPhamChiTiet.moTa) {
+                alert("Vui lòng điền đầy đủ thông tin Giá sản phẩm và Số lượng.");
+            }else {
+                $.ajax({
+                    url: '/api/SPCT',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(sanPhamChiTiet),
+                    success: function (response) {
+                        alert('Sản phẩm chi tiết đã được thêm thành công!');
+                        loadProductCT($('#code-product').val());
+                        $('#giaSanPham').val('');
+                        $('#soLuong').val('');
+                        $('#moTa').val('');
+                        $('#trongLuong').val('');
+                        $('#active-product2').prop('checked', false);
+                        $('#inactive-product2').prop('checked', false);
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Có lỗi xảy ra: ' + xhr.responseText);
+                    }
+                });
+            }
+
+
+        });
+
+        $('#updateButton').click(function () {
+            var sanPhamChiTiet = {
+                id: $('#idspct').val(),
+                giaSanPham: $('#giaSanPham').val(),
+                gioiTinh: $('#gioiTinh').val(),
+                sanPham: $('#code-product').val(),
+                soLuong: $('#soLuong').val(),
+                trongLuong: $('#trongLuong').val(),
+                danhMuc: $('#danhMuc').val(),
+                hinhAnh: $('#hinhAnh').val(),
+                kichCo: $('#kichCo').val(),
+                nsx: $('#nsx').val(),
+                mauSac: $('#mauSac').val(),
+                chatLieu: $('#chatLieu').val(),
+                moTa: $('#moTa').val(),
+                trangThai: $('#active-product2').is(':checked') ? 1 : 0
+            };
+            if (!sanPhamChiTiet.giaSanPham || !sanPhamChiTiet.soLuong ||!sanPhamChiTiet.trongLuong||!sanPhamChiTiet.id
+            ||!sanPhamChiTiet.moTa) {
+                alert("Vui lòng điền đầy đủ thông tin Giá sản phẩm và Số lượng.");
+            } else {
+                $.ajax({
+                    url: '/api/SPCT',
+                    type: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify(sanPhamChiTiet),
+                    success: function (response) {
+                        alert('Cập Nhật Thành công');
+                        loadProductCT($('#code-product').val());
+                        $('#giaSanPham').val('');
+                        $('#soLuong').val('');
+                        $('#moTa').val('');
+                        $('#trongLuong').val('');
+                        $('#active-product2').prop('checked', false);
+                        $('#inactive-product2').prop('checked', false);
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Có lỗi xảy ra: ' + xhr.responseText);
+                    }
+                });
+            }
+
+
+        });
+
+        $('#thanhToanModal').on('hidden.bs.modal', function () {
+            $('#code-product').val('');
+            $('#name-product').val('');
+        });
+    });
+</script>
+</html>

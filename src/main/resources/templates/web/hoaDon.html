@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+    <title>Hóa Đơn Thanh Toán</title>
+    <style>
+        .invoice-wrapper {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .invoice-container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .invoice-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .invoice-header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .invoice-header p {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        .invoice-details, .customer-details {
+            margin-bottom: 20px;
+        }
+
+        .invoice-details table, .customer-details table, .invoice-items table, .product-list table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .invoice-details th, .invoice-details td, .customer-details th, .customer-details td, .invoice-items th, .invoice-items td, .product-list th, .product-list td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .invoice-items th, .product-list th {
+            background-color: #f4f4f4;
+        }
+
+        .total-row {
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+<div th:replace="~{web/common/header.html}"></div>
+<div class="invoice-wrapper">
+    <div class="invoice-container">
+        <div class="customer-details">
+            <h2>Thông Tin Khách Hàng</h2>
+            <table>
+                <tr>
+                    <th>Họ Tên</th>
+                    <td id="userName"></td>
+                </tr>
+                <tr>
+                    <th>Địa Chỉ</th>
+                    <td id="userAddress"></td>
+                </tr>
+                <tr>
+                    <th>Điện Thoại</th>
+                    <td id="userPhone"></td>
+                </tr>
+            </table>
+        </div>
+        <input type="hidden" class="form-control" id="user" name="user" th:value="${session.user.id}"/>
+        <div class="invoice-items">
+            <h2>Danh Sách Hóa Đơn</h2>
+            <label for="status-select">Chọn Trạng Thái: </label>
+            <select id="status-select" class="form-control">
+                <option value="2"> Đã Mua</option>
+                <option value="1"> Thành Công</option>
+                <option value="3">Hủy</option>
+            </select>
+            <table>
+                <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Ngày Mua Hàng</th>
+                    <th>Trạng Thái</th>
+                    <th>Tổng Tiền</th>
+                    <th>Chọn</th>
+                    <th>Action</th>
+                    <th>Hạn Đổi Trả</th>
+                </tr>
+                </thead>
+                <tbody id="invoice-list">
+                <!-- Hóa đơn sẽ được tải ở đây bởi JavaScript -->
+                </tbody>
+            </table>
+            <input type="hidden" class="form-control" id="userId" name="userId" th:value="${ session.user.id }"/>
+        </div>
+        <div class="product-list">
+            <h2>Danh Sách Sản Phẩm</h2>
+            <table>
+                <thead>
+                <tr>
+                    <th>Ảnh</th>
+                    <th>Tên</th>
+                    <th>Kích Cỡ</th>
+                    <th>Số Lượng</th>
+                    <th>Giá Sản Phẩm</th>
+                </tr>
+                </thead>
+                <tbody id="product-list">
+                <!-- Sản phẩm sẽ được tải ở đây bởi JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        <div class="footer">
+            <p>Cảm ơn quý khách đã mua hàng!</p>
+        </div>
+    </div>
+</div>
+<!-- Modal để hiển thị danh sách sản phẩm chi tiết -->
+<div class="modal fade" id="returnModal" tabindex="-1" aria-labelledby="returnModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="returnModalLabel">Danh sách sản phẩm đổi trả</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Ảnh</th>
+                        <th>Tên</th>
+                        <th>Kích Cỡ</th>
+                        <th>Số Lượng</th>
+                        <th>Giá Sản Phẩm</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody id="product-detail-list">
+                    <!-- Sản phẩm chi tiết sẽ được thêm vào đây -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+<!--                <button type="button" class="btn btn-primary">Xác nhận đổi trả</button>-->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal nhập lý do đổi trả -->
+<div class="modal fade" id="reasonModal" tabindex="-1" role="dialog" aria-labelledby="reasonModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reasonModalLabel">Lý do đổi/trả hàng</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="reasonForm">
+                    <div class="form-group">
+                        <label for="lyDo">Lý do</label>
+                        <textarea class="form-control" id="lyDo" rows="3" placeholder="Nhập lý do đổi/trả"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="soLuong">Số Lượng</label>
+                        <input type="number" class="form-control" id="soLuong" min="1" readonly  />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="submitReasonButton">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div th:replace="web/common/foodter.html"></div>
+<script>
+    $(document).ready(function () {
+        var userId = $('#userId').val();  // Thay thế bằng userId thực tế của bạn
+        $.ajax({
+            type: 'GET',
+            url: '/api/user/' + userId,
+            success: function (response) {
+                var user = response;
+                $('#userName').text(user.ho + ' ' + user.tenDem + ' ' + user.ten);
+                $('#userAddress').text(user.diaChi.tinh + ' ' + user.diaChi.huyen + ' ' + user.diaChi.xa + ' ' + user.diaChi.diaChi);
+                $('#userPhone').text(user.sdt);
+            },
+            error: function (error) {
+                console.error('Error fetching user data:', error);
+                alert('Failed to fetch user data.');
+            }
+        });
+    });
+    $(document).ready(function () {
+        var userId = $('#user').val();  // Lấy ID người dùng từ input hidden
+        getAllHoaDonByIdUser(userId);
+        // Gọi API khi thay đổi trạng thái
+        $('#status-select').change(function () {
+            var selectedStatus = $(this).val();
+
+            // Kiểm tra trạng thái đã chọn
+            if (selectedStatus == 2) {
+
+                getAllHoaDonByIdUser(userId);
+            } else if (selectedStatus == 3) {
+                // Trạng thái Hủy
+                getAllHoaDonByIdHoaDonHuy(userId);
+            } else if (selectedStatus == 1) {
+                // Trạng thái Hủy
+                getAllHoaDonByIdUserTC(userId);
+            }
+        });
+
+        function getAllHoaDonByIdUser(userId) {
+            $.ajax({
+                url: '/api/HDCT/' + userId,
+                method: 'GET',
+                success: function (data) {
+                    renderInvoiceList(data);
+                },
+                error: function (error) {
+                    console.error('Lỗi khi gọi API', error);
+                }
+            });
+        }
+
+        function getAllHoaDonByIdUserTC(userId) {
+            $.ajax({
+                url: '/api/HDCT/tc/' + userId,
+                method: 'GET',
+                success: function (data) {
+                    renderInvoiceList(data);
+                },
+                error: function (error) {
+                    console.error('Lỗi khi gọi API', error);
+                }
+            });
+        }
+
+        function getAllHoaDonByIdHoaDonHuy(userId) {
+            $.ajax({
+                url: '/api/HDCT/huy/' + userId,
+                method: 'GET',
+                success: function (data) {
+                    renderInvoiceList(data);
+                },
+                error: function (error) {
+                    console.error('Lỗi khi gọi API', error);
+                }
+            });
+        }
+
+        function renderInvoiceList(data) {
+            var invoiceList = $('#invoice-list');
+            invoiceList.empty();
+
+            var currentDate = new Date(); // Ngày hiện tại
+
+            data.forEach(function (item, index) {
+                var row = $('<tr></tr>');
+                row.append('<td>' + (index + 1) + '</td>');
+                row.append('<td>' + item.createDate + '</td>');  // Ngày mua
+                row.append('<td>' + item.trangThaiHD.ten + '</td>');  // Trạng thái hóa đơn
+                row.append('<td>' + item.tongTien + '</td>');  // Tổng tiền
+                row.append('<td><input type="checkbox" class="invoice-checkbox" data-id="' + item.id + '"></td>');
+
+                // Tính toán số ngày giữa ngày mua và ngày hiện tại
+                var purchaseDate = new Date(item.createDate);  // Chuyển ngày mua sang kiểu Date
+                var diffDays = Math.floor((currentDate - purchaseDate) / (1000 * 60 * 60 * 24));  // Số ngày chênh lệch
+
+                // Chỉ thêm nút hủy nếu trạng thái là 2 hoặc 3
+                if (item.trangThaiHD.trangThai == 2 || item.trangThaiHD.trangThai == 3) {
+                    var cancelButton = $('<button class="btn btn-danger cancel-button" data-id="' + item.id + '">Hủy</button>');
+
+                    // Thêm sự kiện click cho nút hủy
+                    cancelButton.click(function () {
+                        var invoiceId = $(this).data('id');
+                        $.ajax({
+                            url: '/api/hd/' + invoiceId,
+                            method: 'PUT',
+                            success: function () {
+                                alert('Hóa đơn đã được hủy thành công.');
+                                // Làm mới lại danh sách hóa đơn sau khi hủy
+                                location.reload();
+                            },
+                            error: function (error) {
+                                console.error('Lỗi khi hủy hóa đơn', error);
+                                alert('Có lỗi xảy ra khi hủy hóa đơn.');
+                            }
+                        });
+                    });
+
+                    row.append($('<td></td>').append(cancelButton));
+                } else {
+                    row.append('<td></td>'); // Thêm ô trống nếu không có nút hủy
+                }
+
+                // Điều kiện để hiển thị nút "Đổi trả hàng": trạng thái thành công và số ngày < 3
+                if (item.trangThaiHD.trangThai == 1 && diffDays < 3) {
+                    var remainingDays = 3 - diffDays; // Số ngày còn lại
+
+                    // Tạo nút với số ngày còn lại trong nhãn
+                    var returnButton = $('<button class="btn btn-warning return-button" data-id="' + item.id + '">' + 'Đổi trả hàng (' + remainingDays + ' ngày)</button>');
+
+
+                    // Thêm sự kiện click cho nút đổi trả
+                    returnButton.click(function () {
+                        var invoiceId = $(this).data('id');
+
+                        // Gọi API để lấy danh sách sản phẩm chi tiết
+                        $.ajax({
+                            url: '/api/HDCT/GetALL/' + invoiceId,
+                            method: 'GET',
+                            success: function (response) {
+                                // Làm trống danh sách sản phẩm trong modal
+                                var productList = $('#product-detail-list');
+                                productList.empty();
+
+                                // Lặp qua danh sách sản phẩm và thêm vào modal
+                                response.forEach(function (product) {
+                                    var productRow = '<tr>' +
+                                        '<td><img src="' + product.sanPhamChiTiet.hinhAnh.duongDan + '" alt="Ảnh sản phẩm" style="width: 50px; height: 50px;"></td>' +
+                                        '<td>' + product.sanPhamChiTiet.sanPham.tenSanPham + '</td>' +
+                                        '<td>' + product.sanPhamChiTiet.kichCo.tenKichCo + '</td>' +
+                                        '<td>' + product.soLuong + '</td>' +
+                                        '<td>' + product.sanPhamChiTiet.giaSanPham + '</td>' +
+                                        '<td>' +
+                                        // Nút Đổi
+                                        '<button class="btn btn-danger btn-doi" data-id="' + product.sanPhamChiTiet.id
+                                        + '" data-soLuong="' + product.soLuong + '" data-hoaDonId="' + product.hoaDon.id + '">Đổi</button>' +
+                                        '<button class="btn btn-danger btn-tra" data-id="' + product.sanPhamChiTiet.id
+                                        + '" data-soLuong="' + product.soLuong + '" data-hoaDonId="' + product.hoaDon.id + '">Trả</button>' +
+                                        '</td>' +
+                                        '</tr>';
+                                    productList.append(productRow);
+                                });
+
+                                // Hiển thị modal
+                                $('#returnModal').modal('show');
+
+                                $('#returnModal .btn-secondary').click(function () {
+                                    $('#returnModal').modal('hide');
+                                });
+                            },
+                            error: function (error) {
+                                console.error('Lỗi khi lấy chi tiết hóa đơn', error);
+                                alert('Có lỗi xảy ra khi lấy chi tiết hóa đơn.');
+                            }
+                        });
+                    });
+
+                    row.append($('<td></td>').append(returnButton));
+                } else {
+                    row.append('<td></td>'); // Thêm ô trống nếu không có nút đổi trả
+                }
+
+                invoiceList.append(row); // Thêm hàng vào invoiceList
+            });
+
+            // Thêm sự kiện thay đổi cho các checkbox
+            $('.invoice-checkbox').change(function () {
+                var invoiceId = $(this).data('id'); // Lấy invoiceId từ thuộc tính data-id
+                if ($(this).is(':checked')) {
+                    // Bỏ chọn tất cả các checkbox khác
+                    $('.invoice-checkbox').not(this).prop('checked', false);
+
+                    loadProducts(invoiceId);
+                } else {
+                    // Nếu checkbox bị bỏ chọn, làm trống bảng sản phẩm
+                    $('#product-list').empty();
+                }
+            });
+
+            function loadProducts(invoiceId) {
+                $.ajax({
+                    url: '/api/HDCT/GetALL/' + invoiceId,
+                    method: 'GET',
+                    success: function (data) {
+                        var productList = $('#product-list');
+                        productList.empty();
+
+                        data.forEach(function (item) {
+                            var row = $('<tr></tr>');
+                            row.append('<td><img src="' + item.sanPhamChiTiet.hinhAnh.duongDan + '" alt="Ảnh sản phẩm" style="width: 50px; height: 50px;"></td>');
+                            row.append('<td>' + item.sanPhamChiTiet.sanPham.tenSanPham + '</td>');
+                            row.append('<td>' + item.sanPhamChiTiet.kichCo.tenKichCo + '</td>');
+                            row.append('<td>' + item.soLuong + '</td>');
+                            row.append('<td>' + item.sanPhamChiTiet.giaSanPham + '</td>');
+                            productList.append(row); // Thêm hàng vào productList
+                        });
+                    },
+                    error: function (error) {
+                        console.error('Lỗi khi gọi API sản phẩm', error);
+                    }
+                });
+            }
+        }
+
+        $(document).on('click', '.btn-doi, .btn-tra', function () {
+            var productId = $(this).data('id'); // Lấy ID sản phẩm
+            var productQuantity = $(this).attr('data-soLuong');
+            var hoaDonid = $(this).attr('data-hoaDonId');
+            var actionType = $(this).hasClass('btn-doi') ? 'Đổi' : 'Trả'; // Xác định hành động
+
+            console.log('ID sản phẩm:', productId);
+            console.log('Số lượng sản phẩm:', productQuantity);
+            console.log('ID hóa đơn:', hoaDonid);
+
+            if (productQuantity === undefined) {
+                console.error('Lỗi: Không tìm thấy thuộc tính data-soLuong.');
+                return;
+            }
+
+            // Hiển thị modal và thiết lập giá trị
+            $('#reasonModal').modal('show');
+            $('#soLuong').val(productQuantity).attr('max', productQuantity);
+            $('#reasonModalLabel').text('Lý do ' + actionType + ' hàng');
+
+            // Gán sự kiện cho nút xác nhận
+            $('#submitReasonButton').off('click').on('click', function () {
+                var lyDo = $('#lyDo').val();
+                var soLuong = $('#soLuong').val();
+
+                if (!lyDo.trim()) {
+                    alert('Vui lòng nhập lý do!');
+                    return;
+                }
+
+                if (!soLuong || soLuong < 1 || soLuong > productQuantity) {
+                    alert('Số lượng phải lớn hơn 0 và không vượt quá số lượng sản phẩm trong hóa đơn!');
+                    return;
+                }
+
+                // Gọi API để gửi lý do đổi/trả
+                $.ajax({
+                    url: '/api/tra-hang/add',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        sanPhamChiTiet: productId,
+                        hoaDon: hoaDonid,
+                        type: actionType, // Sử dụng biến actionType
+                        lyDo: lyDo,
+                        soLuong: soLuong,
+                        status: 0
+                    }),
+                    success: function (response) {
+                        alert('Yêu cầu ' + actionType + ' hàng đã được gửi thành công.');
+                        $('#reasonModal').modal('hide');
+                        location.reload();
+                    },
+                    error: function (error) {
+                        console.error('Lỗi khi gửi yêu cầu đổi/trả', error);
+                        alert('Có lỗi xảy ra khi gửi yêu cầu.');
+                    }
+                });
+            });
+        });
+    });
+
+
+
+</script>
+</body>
+</html>

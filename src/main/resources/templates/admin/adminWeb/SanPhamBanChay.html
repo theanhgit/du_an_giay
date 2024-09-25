@@ -1,0 +1,479 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--  <meta charset="UTF-8">-->
+<!--  <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--  <title>Trang Quản Lý Thống Kê</title>-->
+<!--  &lt;!&ndash; Include Bootstrap CSS &ndash;&gt;-->
+<!--  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">-->
+<!--  &lt;!&ndash; Include Chart.js CDN &ndash;&gt;-->
+<!--  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>-->
+<!--  <style>-->
+<!--    body {-->
+<!--      background-color: #f4f4f4;-->
+<!--      padding-top: 20px;-->
+<!--    }-->
+<!--    .container {-->
+<!--      max-width: 1200px;-->
+<!--    }-->
+<!--    .chart-container {-->
+<!--      margin-top: 20px;-->
+<!--    }-->
+<!--    table img {-->
+<!--      max-width: 100px;-->
+<!--      height: auto;-->
+<!--    }-->
+<!--  </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--<div class="container">-->
+<!--  <h1 class="text-center">Trang Quản Lý Thống Kê</h1>-->
+
+<!--  &lt;!&ndash; Tìm kiếm hóa đơn &ndash;&gt;-->
+<!--  <div class="mb-4">-->
+<!--    <h2>Tìm Kiếm Hóa Đơn</h2>-->
+<!--    <form id="searchForm" class="form-inline">-->
+<!--      <div class="form-group mb-2">-->
+<!--        <label for="startDate" class="sr-only">Từ ngày</label>-->
+<!--        <input type="date" id="startDate" class="form-control" placeholder="Từ ngày" required>-->
+<!--      </div>-->
+<!--      <div class="form-group mx-sm-3 mb-2">-->
+<!--        <label for="endDate" class="sr-only">Đến ngày</label>-->
+<!--        <input type="date" id="endDate" class="form-control" placeholder="Đến ngày" required>-->
+<!--      </div>-->
+<!--      <button type="submit" class="btn btn-primary mb-2">Tìm kiếm</button>-->
+<!--    </form>-->
+<!--  </div>-->
+
+<!--  &lt;!&ndash; Thống kê doanh số theo tháng &ndash;&gt;-->
+<!--  <div class="chart-container">-->
+<!--    <h2>Thống Kê Doanh Số Theo Tháng</h2>-->
+<!--    <canvas id="salesChart" width="400" height="200"></canvas>-->
+<!--  </div>-->
+
+<!--  &lt;!&ndash; Sản phẩm bán chạy &ndash;&gt;-->
+<!--  <div class="chart-container">-->
+<!--    <h2>Sản Phẩm Bán Chạy Nhất</h2>-->
+<!--    <canvas id="productChart" width="400" height="200"></canvas>-->
+<!--    <table class="table table-striped mt-4">-->
+<!--      <thead>-->
+<!--      <tr>-->
+<!--        <th>Ảnh Sản Phẩm</th>-->
+<!--        <th>Tên Sản Phẩm</th>-->
+<!--        <th>Số Lượng Đã Bán</th>-->
+<!--      </tr>-->
+<!--      </thead>-->
+<!--      <tbody id="productTableBody">-->
+<!--      &lt;!&ndash; Rows will be added here dynamically &ndash;&gt;-->
+<!--      </tbody>-->
+<!--    </table>-->
+<!--  </div>-->
+
+<!--  &lt;!&ndash; Thống kê sản phẩm bán theo ngày &ndash;&gt;-->
+<!--  <div class="chart-container">-->
+<!--    <h2>Thống Kê Sản Phẩm Bán Theo Ngày</h2>-->
+<!--    <table class="table table-striped mt-4">-->
+<!--      <thead>-->
+<!--      <tr>-->
+<!--        <th>Tên Sản Phẩm</th>-->
+<!--        <th>Kích Cỡ</th>-->
+<!--        <th>Màu Sắc</th>-->
+<!--        <th>Tổng Số Lượng</th>-->
+<!--        <th>Ngày</th>-->
+<!--      </tr>-->
+<!--      </thead>-->
+<!--      <tbody id="dailyProductTableBody">-->
+<!--      &lt;!&ndash; Rows will be added here dynamically &ndash;&gt;-->
+<!--      </tbody>-->
+<!--    </table>-->
+<!--  </div>-->
+<!--</div>-->
+
+<!--&lt;!&ndash; Include jQuery and Bootstrap JS &ndash;&gt;-->
+<!--<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>-->
+<!--<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.10/dist/umd/popper.min.js"></script>-->
+<!--<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>-->
+<!--<script>-->
+<!--  // Fetch and render sản phẩm bán chạy-->
+<!--  fetch('/api/thongke/sanphambanchay')-->
+<!--          .then(response => response.json())-->
+<!--          .then(products => {-->
+<!--            const labels = products.map(product => product.tenSanpham);-->
+<!--            const data = products.map(product => product.tongSoLuong);-->
+<!--            const images = products.map(product => `http://localhost:8080/${product.hinhAnh}`);-->
+
+<!--            // Create the line chart for products-->
+<!--            const productCtx = document.getElementById('productChart').getContext('2d');-->
+<!--            new Chart(productCtx, {-->
+<!--              type: 'line',-->
+<!--              data: {-->
+<!--                labels: labels,-->
+<!--                datasets: [{-->
+<!--                  label: 'Số lượng đã bán',-->
+<!--                  data: data,-->
+<!--                  backgroundColor: 'rgba(75, 192, 192, 0.2)',-->
+<!--                  borderColor: 'rgba(75, 192, 192, 1)',-->
+<!--                  borderWidth: 1-->
+<!--                }]-->
+<!--              },-->
+<!--              options: {-->
+<!--                scales: {-->
+<!--                  y: {-->
+<!--                    beginAtZero: true-->
+<!--                  }-->
+<!--                }-->
+<!--              }-->
+<!--            });-->
+
+<!--            // Update table with product data-->
+<!--            const tableBody = document.getElementById('productTableBody');-->
+<!--            products.forEach(product => {-->
+<!--              const row = document.createElement('tr');-->
+<!--              row.innerHTML = `-->
+<!--          <td><img src="http://localhost:8080/${product.hinhAnh}" alt="${product.tenSanpham}"></td>-->
+<!--          <td>${product.tenSanpham}</td>-->
+<!--          <td>${product.tongSoLuong}</td>-->
+<!--        `;-->
+<!--              tableBody.appendChild(row);-->
+<!--            });-->
+<!--          })-->
+<!--          .catch(error => console.error('Error fetching product data:', error));-->
+
+<!--  // Fetch and render thống kê doanh số theo tháng-->
+<!--  fetch('/api/thongke/theothang')-->
+<!--          .then(response => response.json())-->
+<!--          .then(data => {-->
+<!--            const labels = data.map(item => item[0]);-->
+<!--            const values = data.map(item => item[1]);-->
+
+<!--            // Create the bar chart for sales-->
+<!--            const salesCtx = document.getElementById('salesChart').getContext('2d');-->
+<!--            new Chart(salesCtx, {-->
+<!--              type: 'bar',-->
+<!--              data: {-->
+<!--                labels: labels,-->
+<!--                datasets: [{-->
+<!--                  label: 'Doanh Số',-->
+<!--                  data: values,-->
+<!--                  backgroundColor: 'rgba(75, 192, 192, 0.2)',-->
+<!--                  borderColor: 'rgba(75, 192, 192, 1)',-->
+<!--                  borderWidth: 1-->
+<!--                }]-->
+<!--              },-->
+<!--              options: {-->
+<!--                scales: {-->
+<!--                  y: {-->
+<!--                    beginAtZero: true-->
+<!--                  }-->
+<!--                }-->
+<!--              }-->
+<!--            });-->
+<!--          })-->
+<!--          .catch(error => console.error('Error fetching sales data:', error));-->
+
+<!--  // Handle form submission for searching invoices-->
+<!--  document.getElementById('searchForm').addEventListener('submit', function (event) {-->
+<!--    event.preventDefault();-->
+<!--    const startDate = document.getElementById('startDate').value;-->
+<!--    const endDate = document.getElementById('endDate').value;-->
+
+<!--    if (startDate && endDate) {-->
+<!--      fetch(`/api/thongke/timkiem?startDate=${startDate}T00:00:00&endDate=${endDate}T23:59:59`)-->
+<!--              .then(response => response.json())-->
+<!--              .then(hoaDons => {-->
+<!--                let tableContent = "";-->
+<!--                hoaDons.forEach(hoaDon => {-->
+<!--                  tableContent += `-->
+<!--              <tr>-->
+<!--                <td>${hoaDon.tenSanpham}</td>-->
+<!--                <td>${hoaDon.kichCo}</td>-->
+<!--                <td>${hoaDon.mauSac}</td>-->
+<!--                <td>${hoaDon.tongSoLuong}</td>-->
+<!--                <td>${hoaDon.ngay}</td>-->
+<!--              </tr>-->
+<!--            `;-->
+<!--                });-->
+<!--                document.getElementById('dailyProductTableBody').innerHTML = tableContent;-->
+<!--              })-->
+<!--              .catch(error => console.error('Error fetching invoice data:', error));-->
+<!--    }-->
+<!--  });-->
+<!--</script>-->
+<!--</body>-->
+<!--</html>-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang Quản Lý Thống Kê</title>
+    <!-- Include Bootstrap CSS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <th:block th:replace="~{cssImport.html :: layout_import_css}"/>
+
+    <!-- Include Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #f4f4f4;
+            padding-top: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+        }
+
+        .chart-container {
+            margin-top: 20px;
+        }
+
+        table img {
+            max-width: 100px;
+            height: auto;
+        }
+
+        .card-header {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .card-body {
+            background-color: white;
+        }
+
+        .d-none {
+            display: none;
+        }
+
+        .text-danger {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+<div th:replace="~{admin/common/Header.html}"></div>
+<div th:replace="~{admin/common/menu.html}"></div>
+<div class="content-wrapper">
+    <section class="content">
+        <div class="main-content">
+            <div class="main-content-inner">
+                <div class="container">
+                    <h1 class="text-center mb-4">Trang Quản Lý Thống Kê</h1>
+
+                    <!-- Tìm kiếm hóa đơn -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Tìm Kiếm Sản Phẩm Theo Ngày</h2>
+                        </div>
+                        <div class="card-body">
+                            <form id="searchForm" class="form-inline justify-content-center">
+                                <div class="form-group mb-2">
+                                    <label for="startDate" class="sr-only">Từ Ngày:</label>
+                                    <input type="date" id="startDate" class="form-control mr-2" placeholder="Từ ngày" required>
+                                </div>
+                                <div class="form-group mb-2">
+                                    <label for="endDate" class="sr-only">Đến Ngày:</label>
+                                    <input type="date" id="endDate" class="form-control mr-2" placeholder="Đến ngày" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary mb-2">Tìm kiếm</button>
+                            </form>
+                            <!-- Thông báo lỗi -->
+                            <div id="dateError" class="text-danger mt-2 d-none">
+                                Ngày kết thúc phải sau ngày bắt đầu.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thống kê sản phẩm bán theo ngày -->
+                    <div class="chart-container mt-4 d-none" id="dailyProductStats">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Thống Kê Sản Phẩm Bán Theo Ngày</h2>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>Tên Sản Phẩm</th>
+                                        <th>Kích Cỡ</th>
+                                        <th>Màu Sắc</th>
+                                        <th>Tổng Số Lượng</th>
+                                        <th>Ngày</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="dailyProductTableBody">
+                                    <!-- Rows will be added here dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thống kê doanh số theo tháng -->
+                    <div class="chart-container mt-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Thống Kê Doanh Số Theo Tháng</h2>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="salesChart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sản phẩm bán chạy nhất -->
+                    <div class="chart-container mt-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Sản Phẩm Bán Chạy Nhất</h2>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="productChart" width="400" height="200"></canvas>
+                                <table class="table table-striped mt-4">
+                                    <thead>
+                                    <tr>
+                                        <th>Ảnh Sản Phẩm</th>
+                                        <th>Tên Sản Phẩm</th>
+                                        <th>Số Lượng Đã Bán</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="productTableBody">
+                                    <!-- Rows will be added here dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+<div th:replace="~{admin/common/foodter.html}"></div>
+</div>
+<th:block th:replace="jsImport.html :: layout_import_js"/>
+<!-- Include jQuery and Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.10/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    // Fetch and render sản phẩm bán chạy
+    fetch('/api/thongke/sanphambanchay')
+        .then(response => response.json())
+        .then(products => {
+            const labels = products.map(product => product.tenSanpham);
+            const data = products.map(product => product.tongSoLuong);
+            const images = products.map(product => `http://localhost:8080/${product.hinhAnh}`);
+
+            // Create the line chart for products
+            const productCtx = document.getElementById('productChart').getContext('2d');
+            new Chart(productCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Số lượng đã bán',
+                        data: data,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Update table with product data
+            const tableBody = document.getElementById('productTableBody');
+            products.forEach(product => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+          <td><img src="http://localhost:8080/${product.hinhAnh}" alt="${product.tenSanpham}"></td>
+          <td>${product.tenSanpham}</td>
+          <td>${product.tongSoLuong}</td>
+        `;
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(error => console.error('Error fetching product data:', error));
+
+    // Fetch and render thống kê doanh số theo tháng
+    fetch('/api/thongke/theothang')
+        .then(response => response.json())
+        .then(data => {
+            const labels = data.map(item => item[0]);
+            const values = data.map(item => item[1]);
+
+            // Create the bar chart for sales
+            const salesCtx = document.getElementById('salesChart').getContext('2d');
+            new Chart(salesCtx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Doanh Số',
+                        data: values,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error fetching sales data:', error));
+
+    // Handle form submission for searching invoices
+    document.getElementById('searchForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const dateError = document.getElementById('dateError');
+
+        // Reset error message
+        dateError.classList.add('d-none');
+
+        if (startDate && endDate) {
+            if (new Date(endDate) < new Date(startDate)) {
+                dateError.classList.remove('d-none');
+                return;
+            }
+
+            fetch(`/api/thongke/timkiem?startDate=${startDate}T00:00:00&endDate=${endDate}T23:59:59`)
+                .then(response => response.json())
+                .then(hoaDons => {
+                    let tableContent = "";
+                    hoaDons.forEach(hoaDon => {
+                        tableContent += `
+              <tr>
+                <td>${hoaDon.tenSanpham}</td>
+                <td>${hoaDon.kichCo}</td>
+                <td>${hoaDon.mauSac}</td>
+                <td>${hoaDon.tongSoLuong}</td>
+                <td>${hoaDon.ngay}</td>
+              </tr>
+            `;
+                    });
+                    document.getElementById('dailyProductTableBody').innerHTML = tableContent;
+                    document.getElementById('dailyProductStats').classList.remove('d-none');
+                })
+                .catch(error => console.error('Error fetching search results:', error));
+        }
+    });
+</script>
+</body>
+</html>

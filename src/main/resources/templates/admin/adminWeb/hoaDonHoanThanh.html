@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8"
+            src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
+    <th:block th:replace="~{cssImport.html :: layout_import_css}"/>
+</head>
+<body>
+<div th:replace="~{admin/common/Header.html}"></div>
+<div th:replace="~{admin/common/menu.html}"></div>
+
+<div class="content-wrapper">
+    <section class="content">
+        <div class="main-content">
+            <h2> Danh Sách Hóa Đơn Đã Hoàn Thành</h2>
+            <div class="table-responsive">
+                <table id="tableHoanThanh" class="table table-bordered">
+                    <thead class="thead-dark">
+                    <tr>
+                        <th></th>
+                        <th>Mã hóa đơn</th>
+                        <th>Ngày tạo hóa đơn</th>
+                        <th>Ngày Thanh Toán</th>
+                        <th>Trạng thái</th>
+                        <th>Tổng tiền</th>
+                        <th>Tên khách hàng</th>
+                        <th>Hạn đổi trả</th>
+                        <th>Ghi Chú</th>
+                        <th>Hành Động</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Hàng thông tin hóa đơn -->
+                    <tr th:each="hoaDon : ${hoaDonHoanThanh}">
+                        <td>
+                            <button class="detailsButton btn btn-success" th:attr="data-hoaDonId=${hoaDon.id}">+
+                            </button>
+                        </td>
+                        <td th:text="${hoaDon.id}" id="hoaDonIdCell"></td>
+                        <td th:text="${hoaDon.createDate}"></td>
+                        <td th:text="${hoaDon.ngayThanhToan}"></td>
+                        <td th:text="${hoaDon.getTrangThaiHD().ten}"></td>
+                        <td th:text="${hoaDon.tongTien  }"></td>
+                        <td th:text="${hoaDon.user.sdt != null ? hoaDon.user.ten + ' - ' + hoaDon.user.sdt : hoaDon.user.ten}"></td>
+                        <td th:text="${hoaDon.conTrongThoiHanDoi ? 'Còn thời hạn đổi' : 'Hết thời gian đổi'}"></td>
+                        <td th:text="${hoaDon.ghiChu}"></td>
+                        <td>
+                            <button th:attr="data-hoaDonId=${hoaDon.id}" class="btn btn-primary nutDoi"
+                                    th:if="${hoaDon.conTrongThoiHanDoi && (hoaDon.ghiChu == null || hoaDon.ghiChu == '')}">
+                                Đổi/Trả
+                            </button>
+<!--                            <form th:action="@{'/delete/' + ${hoaDon.id}}" method="post"-->
+<!--                                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa hóa đơn này?');">-->
+<!--                                <button type="submit" class="btn btn-danger">Xóa</button>-->
+<!--                            </form>-->
+                        </td>
+                    </tr>
+                </table>
+                    <!-- Hàng chi tiết hóa đơn ẩn/hiện -->
+                    <tr th:each="hoaDon : ${hoaDonHoanThanh}" th:id="'details-' + ${hoaDon.id}" style="display:none;">
+                        <td colspan="10">
+                            <div>
+                                <h3 class="text-center">Chi tiết hóa đơn</h3>
+                                <table class="table table-striped table-bordered">
+                                    <thead class="thead-dark">
+                                    <tr>
+                                        <th>Tên sản phẩm</th>
+                                        <th>Màu sắc</th>
+                                        <th>Kích cỡ</th>
+                                        <th>Số lượng</th>
+                                        <th>Đơn giá</th>
+                                        <th>Thành tiền</th>
+                                        <th>Giá sau khi giảm</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody th:attr="id='productListBody-' + ${hoaDon.id}"></tbody>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+
+
+                <!-- Bảng chi tiết sản phẩm đổi trả -->
+                <h3 class="text-center">Danh sách sản phẩm đổi trả</h3>
+                <table class="table table-striped table-bordered">
+                    <thead class="thead-dark">
+                    </thead>
+                    <tbody id="productDetails" class="product-details"></tbody>
+                </table>
+                <!-- Pagination Controls -->
+                <div class="pagination">
+                    <ul class="pagination">
+                        <!-- Previous Button -->
+                        <li th:class="${currentPage == 0} ? 'disabled'">
+                            <a th:href="@{/hoadon/hoan-thanh(pageHT=${currentPage - 1})}" th:if="${currentPage > 0}">Previous</a>
+                        </li>
+
+                        <!-- Page Numbers -->
+                        <li th:each="page : ${#numbers.sequence(0, totalPages - 1)}"
+                            th:class="${page == currentPage} ? 'active'">
+                            <a th:href="@{/hoadon/hoan-thanh(pageHT=${page})}" th:text="${page + 1}"></a>
+                        </li>
+
+                        <!-- Next Button -->
+                        <li th:class="${currentPage == totalPages - 1} ? 'disabled'">
+                            <a th:href="@{/hoadon/hoan-thanh(pageHT=${currentPage + 1})}"
+                               th:if="${currentPage < totalPages - 1}">Next</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+
+<script>
+    $(document).ready(function () {
+        $('#tableHoanThanh').DataTable({
+        });
+        const detailsButtons = document.querySelectorAll('.detailsButton');
+
+        detailsButtons.forEach(button => {
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
+                const hoaDonId = button.getAttribute('data-hoaDonId');
+                const currentSign = button.textContent.trim();
+
+                // Xử lý khi nhấn nút "+"
+                if (currentSign === '+') {
+                    handleFormSubmit(event, hoaDonId, button);
+                    button.textContent = '-'; // Đổi nút về "-"
+                }
+                // Xử lý khi nhấn nút "-"
+                else if (currentSign === '-') {
+                    hideDetails(hoaDonId, button); // Ẩn chi tiết hóa đơn
+                    button.textContent = '+'; // Đặt lại nút về "+"
+                }
+                    // Xử lý khi nhấn nút "Đổi"
+                // Xử lý khi nhấn nút "Trả"
+                else if (currentSign === 'Đổi/Trả') {
+                    handleGetProductsByHoaDonId(event, hoaDonId, button);
+                    button.textContent = '-'; // Đổi nút về "-"
+                }
+            });
+        });
+
+        // Gán sự kiện cho các nút Đổi và Trả
+        const changeButtons = document.querySelectorAll('.nutDoi');
+
+        changeButtons.forEach(button => {
+            button.addEventListener('click', function (event) {
+                event.preventDefault(); // Ngăn chặn hành động mặc định
+                const hoaDonId = button.getAttribute('data-hoaDonId'); // Lấy ID hóa đơn từ thuộc tính
+                const currentSign = button.textContent.trim();
+                if (currentSign === 'Đổi/Trả') {
+                    handleGetProductsByHoaDonId(event, hoaDonId, button); // Gọi hàm để lấy sản phẩm
+                    button.textContent = '-'; // Đổi nút về "-"
+                } else {
+                    hideDetails(hoaDonId, button); // Thu nhỏ chi tiết
+                    button.textContent = 'Đổi/Trả'; // Đặt lại nút về "+"
+                }
+            });
+        });
+    });
+
+    // Lấy ra các sản phẩm của hóa đơn
+    function handleFormSubmit(event, hoaDonId, button) {
+        const url = `/getDetails/${hoaDonId}`;
+        console.log(`Fetching details for invoice ID: ${hoaDonId}`);
+        console.log('URL: ' + url);
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Hóa đơn không có sản phẩm');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Details:', data);
+                showDetails(hoaDonId, data, button);
+            })
+            .catch(error => {
+                console.error('Error fetching details:', error);
+                alert(`Đã xảy ra lỗi khi lấy chi tiết: ${error.message}`);
+            });
+    }
+
+    // hiển thị ra sản phẩm trong hóa đơn
+    function showDetails(hoaDonId, data, button) {
+        const productListBody = document.getElementById(`productListBody-${hoaDonId}`);
+        if (productListBody) {
+            productListBody.innerHTML = '';
+            data.forEach(product => {
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+            <td>${product.sanPham}</td>
+            <td>${product.mauSac}</td>
+            <td>${product.kichCo}</td>
+            <td>${product.soLuong}</td>
+              <td>${product.giaBan}</td>
+           <td>${product.soLuong * product.giaBan}</td>
+         <td>
+    ${ (product.soLuong * product.giaBan) - (product.soLuong * product.giaBan * product.phanTramGiam / 100) }
+</td>
+        `;
+                productListBody.appendChild(newRow);
+            });
+
+            // Call the function to check invoice status
+            layHoaDonTheoId(hoaDonId);
+
+            // Show the details row
+            const detailsRow = document.getElementById(`details-${hoaDonId}`);
+            if (detailsRow) {
+                detailsRow.style.display = 'table-row';
+            }
+
+            // Change button text to '-' after updating details
+            button.textContent = '-';
+        } else {
+            console.error(`Không tìm thấy phần tử có id 'productListBody-${hoaDonId}'.`);
+        }
+    }
+
+    // lấy ra trạng thái của hóa đơn
+    function layHoaDonTheoId(hoaDonId) {
+        fetch(`http://localhost:8080/trangThai/${hoaDonId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Hóa đơn không có sản phẩm');
+                }
+                return response.json(); // Process JSON
+            })
+            .then(data => {
+                const trangThai = data.trangThai;
+                const trangThaiCanAn = ['2', '3', '4', '5'];
+
+                const deleteButtons = document.querySelectorAll(`#productListBody-${hoaDonId} .btn-danger`);
+                const editButtons = document.querySelectorAll(`#productListBody-${hoaDonId} .btn-success`);
+
+                deleteButtons.forEach(button => {
+                    button.style.display = trangThaiCanAn.includes(trangThai) ? 'none' : 'block';
+                });
+
+                editButtons.forEach(button => {
+                    button.style.display = trangThaiCanAn.includes(trangThai) ? 'none' : 'block';
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching invoice status:', error);
+            });
+    }
+
+    // detail sản phẩm chi tiết
+    function layThongTinSanPham(event, hoaDonId, sanPhamChiTietId) {
+        const url = `/getProductDetail/${hoaDonId}/${sanPhamChiTietId}`;
+        console.log('Fetching product detail with URL:', url);
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(' Hóa đơn không có sản phẩm');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Product detail:', data);
+                document.getElementById('tenSanPham').value = data.tenSanPham || 'N/A';
+                document.getElementById('updateMauSac').value = data.mauSac || 'N/A';
+                document.getElementById('updateKichCo').value = data.kichCo || 'N/A';
+                document.getElementById('updateSoLuong').value = data.soLuong || 0;
+                document.getElementById('updateHoaDonId').value = hoaDonId;
+                document.getElementById('updateSanPhamChiTietId').value = sanPhamChiTietId;
+
+                document.getElementById('updateProductDetailForm').style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Đã xảy ra lỗi khi lấy thông tin sản phẩm.');
+            });
+    }
+
+    function hideUpdateProductForm() {
+        document.getElementById('updateProductDetailForm').style.display = 'none';
+    }
+
+    // Hàm thu nhỏ chi tiết hóa đơn
+    function hideDetails(hoaDonId, button) {
+        const detailsRow = document.getElementById(`details-${hoaDonId}`);
+        if (detailsRow) {
+            detailsRow.style.display = 'none';
+        }
+    }
+
+    // Hàm để ẩn sản phẩm của hóa đơn
+    async function traHang(event, hoaDonId, sanPhamId, soLuongDaMua) {
+        event.preventDefault();
+
+        // Hỏi người dùng nhập số lượng trả, luôn xuất hiện hộp thoại prompt
+        const userInput = prompt(`Nhập số lượng bạn muốn trả:`);
+
+        // Chuyển đổi đầu vào của người dùng thành số nguyên
+        let soLuongTra = parseInt(userInput);
+
+        // In ra giá trị của soLuongTra để kiểm tra
+        console.log(`Số lượng trả nhập vào: ${soLuongTra}`);
+
+        // Kiểm tra số lượng nhập có hợp lệ hay không
+        if (isNaN(soLuongTra) || soLuongTra <= 0 || soLuongTra > soLuongDaMua) {
+            alert('Số lượng trả không hợp lệ!');
+            return;
+        }
+        // Xác nhận với người dùng về số lượng sản phẩm muốn trả
+        const confirmation = confirm(`Bạn có chắc chắn muốn trả ${soLuongTra} sản phẩm không?`);
+        if (confirmation) {
+            const url = `/trahang/${hoaDonId}/${sanPhamId}`;
+            console.log(url);
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        soLuongTra: soLuongTra // Gửi số lượng trả trong body
+                    })
+                });
+
+                const responseText = await response.text();
+                let responseData;
+
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (error) {
+                    throw new Error(`Invalid JSON: ${responseText}`);
+                }
+
+                if (!response.ok) {
+                    throw new Error(responseData.message || 'Không lấy được thông tin hóa đơn');
+                }
+
+                // Xử lý trả hàng thành công
+                console.log('Delete request successful', responseData);
+                alert(responseData.message || `Đã trả ${soLuongTra} sản phẩm thành công`);
+                // Tải lại trang
+                window.location.reload();
+            } catch (error) {
+                console.error('Error deleting product detail:', error.message);
+                alert(`Lỗi khi trả lại sản phẩm: ${error.message}`);
+            }
+        }
+    }
+
+
+    // Hàm này sẽ gọi API để lấy sản phẩm dựa trên ID hóa đơn
+    function handleGetProductsByHoaDonId(event, hoaDonId, button) {
+        const url = `/getsanpham/${hoaDonId}`; // Tạo URL để lấy sản phẩm
+        console.log(`Fetching products for invoice ID: ${hoaDonId}`);
+        console.log('URL:', url);
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Hóa đơn không có sản phẩm để đổi hoặc trả');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Products:', data);
+                showProducts(hoaDonId, data, button); // Hiển thị sản phẩm
+            })
+            .catch(error => {
+                console.error('Error fetching products:', error);
+                alert(`Đã xảy ra lỗi khi lấy danh sách sản phẩm: ${error.message}`);
+            });
+    }
+
+    function showProducts(hoaDonId, data, button) {
+        const productListBody = document.getElementById(`productListBody-${hoaDonId}`);
+        if (productListBody) {
+            productListBody.innerHTML = '';
+            data.forEach(product => {
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                <td>${product.sanPham}</td>
+                <td>${product.mauSac}</td>
+                <td>${product.kichCo}</td>
+                <td class="soLuong" data-san-pham-id="${product.sanPhamId}">${product.soLuong}</td>
+                <td>${product.giaBan}</td>
+                <td>${product.soLuong * product.giaBan}</td>
+                <td>
+    ${ (product.soLuong * product.giaBan) - (product.soLuong * product.giaBan * product.phanTramGiam / 100) }
+</td>
+                <td>
+                    <button type="button" id="returnButton-${hoaDonId}-${product.sanPhamId}" class="btn btn-danger" onclick="traHang(event, '${hoaDonId}', '${product.sanPhamId}')">Trả Sản Phẩm</button>
+                   <button type="button"
+    id="exchangeButton-${hoaDonId}-${product.sanPhamId}"
+    class="btn btn-success"
+    data-hoa-don-id="${hoaDonId}"
+    data-ten-san-pham="${product.sanPham}"
+    onclick="LaySanPhamTheoTen(event, '${product.sanPhamId}')">
+    Đổi Sản Phẩm
+</button>
+
+                </td>
+            `;
+                productListBody.appendChild(newRow);
+            });
+            // <button type="button" id="exchangeButton-${hoaDonId}-${product.sanPhamId}"
+            //         className="btn btn-success" data-ten-san-pham="${product.sanPham}"
+            //         onClick="LaySanPhamTheoTen(event, '${hoaDonId}', '${product.sanPhamId}')">Đổi Sản Phẩm</button>
+            // Hiển thị hàng chi tiết
+            const detailsRow = document.getElementById(`details-${hoaDonId}`);
+            if (detailsRow) {
+                detailsRow.style.display = 'table-row';
+            }
+            button.textContent = '-'; // Đổi nút về "-"
+        } else {
+            console.error(`Không tìm thấy phần tử có id 'productListBody-${hoaDonId}'.`);
+        }
+    }
+
+    function LaySanPhamTheoTen(event, sanPhamId) {
+        event.preventDefault();
+
+        // Lấy ID hóa đơn từ thuộc tính data-hoa-don-id của nút nhấn
+        const hoaDonId = event.currentTarget.dataset.hoaDonId; // Sử dụng data-hoa-don-id để lấy ID hóa đơn
+        console.log("ID Hóa Đơn:", hoaDonId);
+
+        if (!hoaDonId) {
+            alert('ID hóa đơn không hợp lệ');
+            return;
+        }
+
+        const tenSanPham = event.currentTarget.dataset.tenSanPham; // Lấy tên sản phẩm từ thuộc tính data-ten-san-pham
+
+        // Kiểm tra xem tên sản phẩm có hợp lệ không
+        if (!tenSanPham) {
+            alert('Tên sản phẩm không hợp lệ');
+            return;
+        }
+
+        // Gửi yêu cầu đến API để lấy sản phẩm theo tên
+        const url = `/getCurrentAndRelated/${sanPhamId}/${tenSanPham}`;
+        console.log("Sending request to URL:", url);
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Không tìm thấy sản phẩm với tên: ${tenSanPham}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data); // Hiển thị dữ liệu trong console
+                displayProductDetails(data, sanPhamId, hoaDonId); // Truyền ID hóa đơn
+            })
+            .catch(error => {
+                console.error('Đã xảy ra lỗi:', error);
+                alert(error.message);
+            });
+    }
+
+    function displayProductDetails(products, sanPhamCuId, hoaDonId) { // Nhận thêm tham số hoaDonId
+        const productContainer = document.getElementById('productDetails');
+        console.log('id hóa đơn là:' + hoaDonId)
+
+        // Dọn dẹp nội dung cũ
+        productContainer.innerHTML = '';
+
+        // Kiểm tra nếu có sản phẩm
+        if (products.length === 0) {
+            productContainer.innerHTML = '<p>Không tìm thấy sản phẩm.</p>';
+            return;
+        }
+
+        // Tạo bảng
+        const table = document.createElement('table');
+        table.className = 'table'; // Thêm lớp CSS nếu cần
+        table.innerHTML = `
+    <tr>
+        <th>ID sản phẩm</th> <!-- Thêm cột ID sản phẩm -->
+        <th>Tên sản phẩm</th>
+        <th>Màu sắc</th>
+        <th>Kích cỡ</th>
+        <th>Số lượng Còn Lại</th>
+        <th>Hành động</th>
+    </tr>
+    <tbody>
+    `;
+
+        // Tạo hàng cho từng sản phẩm
+        products.forEach(product => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+        <td>${product.id}</td> <!-- Hiển thị ID sản phẩm -->
+        <td>${product.tenSanPham}</td>
+        <td>${product.tenMauSac}</td>
+        <td>${product.tenKichCo}</td>
+        <td>${product.soLuong}</td>
+        <td>
+    <button type="button" class="btn btn-success"
+        id="exchangeButton-${product.id}"
+        data-ten-san-pham="${product.tenSanPham}"
+        data-hoa-don-id="${hoaDonId}"
+        onclick="exchangeProduct('${sanPhamCuId}', '${product.id}', '${product.tenSanPham}', this.dataset.hoaDonId)"> <!-- Truyền ID hóa đơn từ thuộc tính data -->
+        Đổia
+    </button>
+</td>
+        `;
+            table.appendChild(row); // Thêm hàng vào bảng
+        });
+
+        table.innerHTML += '</tbody>';
+
+        // Thêm bảng vào container
+        productContainer.appendChild(table);
+    }
+
+    function exchangeProduct(sanPhamCuId, sanPhamMoiId, tenSanPhamCu, hoaDonId) {
+        console.log("ID hóa đơn cần đổi là:", hoaDonId); // Sử dụng ID hóa đơn đã truyền vào
+
+        // Lấy số lượng cũ của sản phẩm
+        const soLuongCuElement = document.querySelector(`.soLuong[data-san-pham-id="${sanPhamCuId}"]`);
+        if (!soLuongCuElement) {
+            alert("Không tìm thấy số lượng đã mua!");
+            return;
+        }
+
+        const soLuongCu = parseInt(soLuongCuElement.textContent, 10);
+        console.log("Số lượng đã mua là:", soLuongCu);
+
+        // Hiển thị thông tin sản phẩm cũ và số lượng hiện tại
+        console.log("ID sản phẩm cũ:", sanPhamCuId);
+        console.log("ID sản phẩm mới:", sanPhamMoiId);
+        console.log("Tên sản phẩm cũ:", tenSanPhamCu);
+        console.log("Số lượng cũ:", soLuongCu);
+
+        // Lấy số lượng mới từ người dùng
+        const soLuongMoi = prompt(`Số lượng hiện tại của sản phẩm đã mua là ${soLuongCu}. Nhập số lượng cần đổi:`);
+
+        const soLuongMoiInt = parseInt(soLuongMoi, 10);
+        console.log("Số lượng mới:", soLuongMoiInt);
+
+        // Kiểm tra điều kiện và gọi API
+        if (sanPhamCuId && sanPhamMoiId && !isNaN(soLuongMoiInt) && soLuongMoiInt > 0) {
+            // Kiểm tra xem số lượng đổi có lớn hơn số lượng đã mua hay không
+            if (soLuongMoiInt > soLuongCu) {
+                alert(`Số lượng đổi không thể lớn hơn số lượng đã mua (${soLuongCu})!`);
+                return;
+            }
+
+            const updateRequest = {
+                id: sanPhamMoiId, // ID sản phẩm mới
+                soLuong: soLuongMoiInt // Số lượng sản phẩm mới
+            };
+
+            // Gọi API để cập nhật thông tin sản phẩm
+            const url = `/updateProductDetail/${hoaDonId}/${sanPhamCuId}/${sanPhamMoiId}`;
+            fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updateRequest)
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Thay đổi sản phẩm không thành công.');
+                    }
+                    return response.text();
+                })
+                .then(result => {
+                    alert("Cập nhật sản phẩm chi tiết thành công: " + result);
+                    location.reload(); // Tải lại trang sau khi thông báo
+                })
+                .catch(error => {
+                    console.error('Lỗi:', error);
+                    alert('Đã xảy ra lỗi khi đổi sản phẩm.');
+                });
+        } else {
+            alert("Vui lòng nhập số lượng hợp lệ!");
+        }
+    }
+    // function exchangeProduct(sanPhamCuId, sanPhamMoiId, tenSanPhamCu, hoaDonId, button) {
+    //     console.log("ID hóa đơn cần đổi là:", hoaDonId); // Sử dụng ID hóa đơn đã truyền vào
+    //
+    //     // Lấy số lượng cũ của sản phẩm
+    //     const soLuongCuElement = document.querySelector(`.soLuong[data-san-pham-id="${sanPhamCuId}"]`);
+    //     if (!soLuongCuElement) {
+    //         alert("Không tìm thấy số lượng đã mua!");
+    //         return;
+    //     }
+    //
+    //     const soLuongCu = parseInt(soLuongCuElement.textContent, 10);
+    //     console.log("Số lượng đã mua là:", soLuongCu);
+    //
+    //     // Hiển thị thông tin sản phẩm cũ và số lượng hiện tại
+    //     console.log("ID sản phẩm cũ:", sanPhamCuId);
+    //     console.log("ID sản phẩm mới:", sanPhamMoiId);
+    //     console.log("Tên sản phẩm cũ:", tenSanPhamCu);
+    //     console.log("Số lượng cũ:", soLuongCu);
+    //
+    //     // Lấy số lượng mới từ người dùng
+    //     const soLuongMoi = prompt(`Số lượng hiện tại của sản phẩm đã mua là ${soLuongCu}. Nhập số lượng cần đổi:`);
+    //
+    //     const soLuongMoiInt = parseInt(soLuongMoi, 10);
+    //     console.log("Số lượng mới:", soLuongMoiInt);
+    //
+    //     // Kiểm tra điều kiện và gọi API
+    //     if (sanPhamCuId && sanPhamMoiId && !isNaN(soLuongMoiInt) && soLuongMoiInt > 0) {
+    //         // Kiểm tra xem số lượng đổi có lớn hơn số lượng đã mua hay không
+    //         if (soLuongMoiInt > soLuongCu) {
+    //             alert(`Số lượng đổi không thể lớn hơn số lượng đã mua (${soLuongCu})!`);
+    //             return;
+    //         }
+    //
+    //         const updateRequest = {
+    //             id: sanPhamMoiId, // ID sản phẩm mới
+    //             soLuong: soLuongMoiInt // Số lượng sản phẩm mới
+    //         };
+    //
+    //         // Gọi API để cập nhật thông tin sản phẩm
+    //         const url = `/updateProductDetail/${hoaDonId}/${sanPhamCuId}/${sanPhamMoiId}`;
+    //         fetch(url, {
+    //             method: 'PUT',
+    //             headers: {
+    //                 'Content-Type': 'application/json'
+    //             },
+    //             body: JSON.stringify(updateRequest)
+    //         })
+    //             .then(response => {
+    //                 if (!response.ok) {
+    //                     throw new Error('Thay đổi sản phẩm không thành công.');
+    //                 }
+    //                 return response.json();  // Giả sử API trả về dữ liệu sản phẩm sau khi cập nhật
+    //             })
+    //             .then(result => {
+    //                 alert("Cập nhật sản phẩm chi tiết thành công!");
+    //                 // Gọi API để lấy lại danh sách sản phẩm sau khi đổi và cập nhật lại danh sách
+    //                 fetch(`/getProductDetails/${hoaDonId}`)  // Gọi API lấy lại chi tiết sản phẩm
+    //                     .then(response => response.json())
+    //                     .then(data => {
+    //                         showProducts(hoaDonId, data, button); // Cập nhật lại danh sách sản phẩm trên giao diện
+    //                     })
+    //                     .catch(error => {
+    //                         console.error('Lỗi khi lấy lại chi tiết hóa đơn:', error);
+    //                     });
+    //             })
+    //             .catch(error => {
+    //                 console.error('Lỗi:', error);
+    //                 alert('Đã xảy ra lỗi khi đổi sản phẩm.');
+    //             });
+    //     } else {
+    //         alert("Vui lòng nhập số lượng hợp lệ!");
+    //     }
+    // }
+
+
+</script>
+
+<style>
+    .pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .pagination ul {
+        list-style: none;
+        padding: 0;
+        display: flex;
+    }
+
+    .pagination li {
+        margin: 0 5px;
+    }
+
+    .pagination a {
+        text-decoration: none;
+        padding: 8px 12px;
+        border: 1px solid #007bff;
+        color: #007bff;
+        border-radius: 4px;
+    }
+
+    .pagination a:hover {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .pagination .disabled a {
+        color: #ccc;
+        pointer-events: none;
+    }
+
+    .pagination .active a {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .table {
+        margin-bottom: 1.5rem;
+        background-color: #fff;
+    }
+
+    .table th, .table td {
+        vertical-align: middle;
+        text-align: center; /* Căn giữa nội dung */
+    }
+
+    .table th {
+        background-color: #343a40;
+        color: white;
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: #f8f9fa; /* Màu nền hàng lẻ */
+    }
+
+    .table-striped tbody tr:hover {
+        background-color: #f1f1f1;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .product-details {
+        margin-top: 10px;
+    }
+
+</style>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8"
+            src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
+    <th:block th:replace="~{cssImport.html :: layout_import_css}"/>
+</head>
+<body>
+<div th:replace="~{admin/common/Header.html}"></div>
+<div th:replace="~{admin/common/menu.html}"></div>
+
+<div class="content-wrapper">
+    <section class="content">
+        <div class="main-content">
+            <h2> Danh Sách Hóa Đơn Đã Hủy</h2>
+            <table class="table table-bordered">
+                <thead class="thead-dark">
+                <tr>
+                    <th></th>
+                    <th>Mã hóa đơn</th>
+                    <th>Ngày tạo hóa đơn</th>
+                    <th>Ngày Thanh Toán</th>
+                    <th>Trạng thái</th>
+                    <th>Tổng tiền</th>
+                    <th>Tên khách hàng</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="hoaDon : ${hoaDonHuy}">
+                    <td>
+                        <button class="detailsButton btn btn-success" th:attr="data-hoaDonId=${hoaDon.id}">+
+                        </button>
+                    </td>
+                    <td th:text="${hoaDon.id}"></td>
+                    <td th:text="${hoaDon.createDate}"></td>
+                    <td th:text="${hoaDon.ngayThanhToan}"></td>
+                    <td th:text="${hoaDon.getTrangThaiHD().ten}"></td>
+                    <td th:text="${hoaDon.tongTien}"></td>
+                    <td th:if="${hoaDon.user != null}"
+                        th:text="${hoaDon.user.ten + ' - ' + hoaDon.user.sdt}"></td>
+                </tr>
+                <tr th:each="hoaDon : ${hoaDonHuy}" th:id="'details-' + ${hoaDon.id}"
+                    style="display:none;">
+                    <td colspan="8">
+                        <div>
+                            <h3>Chi tiết hóa đơn</h3>
+                            <table class="table table-bordered">
+                                <thead class="thead-dark">
+                                <tr>
+                                    <th>Tên sản phẩm</th>
+                                    <th>Màu sắc</th>
+                                    <th>Kích cỡ</th>
+                                    <th>Số lượng</th>
+                                    <th>Giá bán</th>
+                                    <th>Thành tiền</th>
+                                    <th>Action</th>
+                                </tr>
+                                </thead>
+                                <tbody th:attr="id='productListBody-' + ${hoaDon.id}">
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <!-- Pagination Controls -->
+            <div class="pagination">
+                <ul class="pagination">
+                    <!-- Previous Button -->
+                    <li th:class="${currentPage == 0} ? 'disabled'">
+                        <a th:href="@{/hoadon/huy(pageCancelled=${currentPage - 1})}" th:if="${currentPage > 0}">Previous</a>
+                    </li>
+
+                    <!-- Page Numbers -->
+                    <li th:each="page : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:class="${page == currentPage} ? 'active'">
+                        <a th:href="@{/hoadon/huy(pageCancelled=${page})}" th:text="${page + 1}"></a>
+                    </li>
+
+                    <!-- Next Button -->
+                    <li th:class="${currentPage == totalPages - 1} ? 'disabled'">
+                        <a th:href="@{/hoadon/huy(pageCancelled=${currentPage + 1})}" th:if="${currentPage < totalPages - 1}">Next</a>
+                    </li>
+                </ul>
+            </div>
+
+
+        </div>
+    </section>
+</div>
+</body>
+
+<script>
+    $(document).ready(function () {
+        const detailsButtons = document.querySelectorAll('.detailsButton');
+        detailsButtons.forEach(button => {
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
+                const hoaDonId = button.getAttribute('data-hoaDonId');
+                const currentSign = button.textContent.trim();
+                if (currentSign === '+') {
+                    handleFormSubmit(event, hoaDonId, button);
+                } else {
+                    hideDetails(hoaDonId, button);
+                }
+            });
+        });
+    });
+
+    // Lấy ra các sản phẩm của hóa đơn
+    function handleFormSubmit(event, hoaDonId, button) {
+        const url = `/getDetails/${hoaDonId}`;
+        console.log(`Fetching details for invoice ID: ${hoaDonId}`);
+        console.log('URL: ' + url);
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Details:', data);
+                showDetails(hoaDonId, data, button);
+            })
+            .catch(error => {
+                console.error('Error fetching details:', error);
+                alert(`Đã xảy ra lỗi khi lấy chi tiết: ${error.message}`);
+            });
+    }
+
+    // hiển thị ra sản phẩm trong hóa đơn
+    function showDetails(hoaDonId, data, button) {
+        const productListBody = document.getElementById(`productListBody-${hoaDonId}`);
+        if (productListBody) {
+            productListBody.innerHTML = '';
+            data.forEach(product => {
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                <td>${product.sanPham}</td>
+                <td>${product.mauSac}</td>
+                <td>${product.kichCo}</td>
+                <td>${product.soLuong}</td>
+                <td>${product.giaBan}</td>
+                <td>${product.thanhTien}</td>
+                <td>
+                    <button type="button" id="deleteButton-${hoaDonId}-${product.sanPhamId}" class="btn btn-danger" onclick="xoaChiTiet(event, '${hoaDonId}', '${product.sanPhamId}')">Xóa</button>
+                </td>
+            `;
+                productListBody.appendChild(newRow);
+            });
+
+            // Call the function to check invoice status
+            layHoaDonTheoId(hoaDonId);
+
+            // Show the details row
+            const detailsRow = document.getElementById(`details-${hoaDonId}`);
+            if (detailsRow) {
+                detailsRow.style.display = 'table-row';
+            }
+
+            // Change button text to '-' after updating details
+            button.textContent = '-';
+        } else {
+            console.error(`Không tìm thấy phần tử có id 'productListBody-${hoaDonId}'.`);
+        }
+    }
+
+    // lấy ra trạng thái của hóa đơn
+    function layHoaDonTheoId(hoaDonId) {
+        fetch(`http://localhost:8080/trangThai/${hoaDonId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json(); // Process JSON
+            })
+            .then(data => {
+                const trangThai = data.trangThai;
+                const trangThaiCanAn = ['1', '2', '3', '4', '5'];
+
+                const deleteButtons = document.querySelectorAll(`#productListBody-${hoaDonId} .btn-danger`);
+                const editButtons = document.querySelectorAll(`#productListBody-${hoaDonId} .btn-success`);
+
+                deleteButtons.forEach(button => {
+                    button.style.display = trangThaiCanAn.includes(trangThai) ? 'none' : 'block';
+                });
+
+                editButtons.forEach(button => {
+                    button.style.display = trangThaiCanAn.includes(trangThai) ? 'none' : 'block';
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching invoice status:', error);
+            });
+    }
+
+    // detail sản phẩm chi tiết
+    function layThongTinSanPham(event, hoaDonId, sanPhamChiTietId) {
+        const url = `/getProductDetail/${hoaDonId}/${sanPhamChiTietId}`;
+        console.log('Fetching product detail with URL:', url);
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Product detail:', data);
+                document.getElementById('tenSanPham').value = data.tenSanPham || 'N/A';
+                document.getElementById('updateMauSac').value = data.mauSac || 'N/A';
+                document.getElementById('updateKichCo').value = data.kichCo || 'N/A';
+                document.getElementById('updateSoLuong').value = data.soLuong || 0;
+                document.getElementById('updateHoaDonId').value = hoaDonId;
+                document.getElementById('updateSanPhamChiTietId').value = sanPhamChiTietId;
+
+                document.getElementById('updateProductDetailForm').style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Đã xảy ra lỗi khi lấy thông tin sản phẩm.');
+            });
+    }
+
+    function hideUpdateProductForm() {
+        document.getElementById('updateProductDetailForm').style.display = 'none';
+    }
+
+    function hideDetails(hoaDonId, button) {
+        const detailsRow = document.getElementById(`details-${hoaDonId}`);
+        if (detailsRow) {
+            detailsRow.style.display = 'none';
+        }
+        button.textContent = '+';
+    }
+
+    // dùng để xóa sản phẩm trong hóa đơn
+    async function xoaChiTiet(event, hoaDonId, sanPhamId) {
+        event.preventDefault();
+        const confirmation = confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi hóa đơn chi tiết?');
+        if (confirmation) {
+            const url = `/sanphamct/delete/${hoaDonId}/${sanPhamId}`;
+            console.log(url);
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const responseText = await response.text();
+                let responseData;
+
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (error) {
+                    throw new Error(`Invalid JSON: ${responseText}`);
+                }
+
+                if (!response.ok) {
+                    throw new Error(responseData.message || 'Network response was not ok');
+                }
+
+                // Xử lý xóa thành công
+                console.log('Delete request successful', responseData);
+                alert(responseData.message || 'Sản phẩm chi tiết đã được xóa thành công');
+                // Tải lại trang
+                window.location.reload();
+            } catch (error) {
+                console.error('Error deleting product detail:', error.message);
+                alert(`Lỗi khi xóa sản phẩm chi tiết: ${error.message}`);
+            }
+        }
+    }
+
+</script>
+<style>
+    .pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .pagination ul {
+        list-style: none;
+        padding: 0;
+        display: flex;
+    }
+
+    .pagination li {
+        margin: 0 5px;
+    }
+
+    .pagination a {
+        text-decoration: none;
+        padding: 8px 12px;
+        border: 1px solid #007bff;
+        color: #007bff;
+        border-radius: 4px;
+    }
+
+    .pagination a:hover {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .pagination .disabled a {
+        color: #ccc;
+        pointer-events: none;
+    }
+
+    .pagination .active a {
+        background-color: #007bff;
+        color: white;
+    }
+
+</style>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chi tiết hóa đơn</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <style>
+    body {
+      background-color: #f4f7f6;
+    }
+    .invoice-header {
+      background-color: #007bff;
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .invoice-details, .invoice-edit {
+      margin-bottom: 20px;
+    }
+    .invoice-table th, .invoice-table td {
+      text-align: center;
+    }
+    .card {
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .btn-custom {
+      background-color: #007bff;
+      color: white;
+      border: none;
+    }
+    .btn-custom:hover {
+      background-color: #0056b3;
+    }
+    .form-check-label {
+      display: block;
+      padding: 10px;
+      border-radius: 5px;
+      color: white;
+      text-align: center;
+    }
+    .status-shipcode {
+      background-color: #17a2b8;
+    }
+    .status-daNhanHang {
+      background-color: #28a745;
+    }
+    .status-daHuy {
+      background-color: #dc3545;
+    }
+    .status-dangGiaoHang {
+      background-color: #ffc107;
+    }
+    .form-check {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-4">
+  <!-- Header -->
+  <div class="invoice-header text-center">
+    <h1>Chi tiết hóa đơn</h1>
+  </div>
+
+  <!-- Alert Messages -->
+  <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+    <span th:text="${errorMessage}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+    <span th:text="${successMessage}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+
+  <!-- Edit Invoice Card -->
+  <div class="card invoice-edit">
+    <div class="card-header bg-primary text-white">
+      <h2>Chỉnh sửa hóa đơn</h2>
+    </div>
+    <div class="card-body">
+      <form th:action="@{/hoadon/update/{id}(id=${hoaDon.id})}" method="post">
+        <!-- ID hóa đơn -->
+        <div class="form-group">
+          <label for="id">ID hóa đơn:</label>
+          <input type="text" id="id" class="form-control" th:value="${hoaDon.id}" readonly>
+        </div>
+
+        <!-- Ngày tạo hóa đơn -->
+        <div class="form-group">
+          <label for="ngayTao">Ngày đặt hàng:</label>
+          <input type="text" id="ngayTao" class="form-control" th:value="${#temporals.format(hoaDon.createDate, 'dd/MM/yyyy ')}" readonly>
+        </div>
+
+        <!-- Ngày thanh toán -->
+        <div class="form-group">
+          <label for="ngayThanhToan">Ngày thanh toán:</label>
+          <input type="text" id="ngayThanhToan" class="form-control" th:value="${hoaDon.ngayThanhToan != null ? #temporals.format(hoaDon.ngayThanhToan, 'dd/MM/yyyy ') : 'Chưa thanh toán'}" readonly>
+        </div>
+
+        <!-- Trạng thái hóa đơn -->
+        <div class="form-group">
+          <label>Trạng thái:</label>
+          <div class="d-flex justify-content-between">
+
+            <!-- ShipCod -->
+            <div class="form-check flex-fill" th:if="${hoaDon.trangThaiHD.trangThai != '3' && hoaDon.trangThaiHD.trangThai != '5'}">
+              <input class="form-check-input" type="radio" name="trangThai" id="shipcode" value="2" th:checked="${hoaDon.trangThaiHD.trangThai == '2'}">
+              <label class="form-check-label status-shipcode" for="shipcode">ShipCod</label>
+            </div>
+
+            <!-- Thanh toán Online -->
+            <div class="form-check flex-fill" th:if="${hoaDon.trangThaiHD.trangThai != '2' && hoaDon.trangThaiHD.trangThai != '5'}">
+              <input class="form-check-input" type="radio" name="trangThai" id="thanhToanOnline" value="3" th:checked="${hoaDon.trangThaiHD.trangThai == '3'}">
+              <label class="form-check-label status-daNhanHang" for="thanhToanOnline">Thanh Toán Online</label>
+            </div>
+
+            <!-- Đang giao hàng -->
+            <div class="form-check flex-fill">
+              <input class="form-check-input" type="radio" name="trangThai" id="dangGiaoHang" value="5" th:checked="${hoaDon.trangThaiHD.trangThai == '5'}">
+              <label class="form-check-label status-dangGiaoHang" for="dangGiaoHang">Đang giao hàng</label>
+            </div>
+
+            <!-- Đã nhận hàng -->
+              <div class="form-check flex-fill" th:if="${hoaDon.trangThaiHD.trangThai != '2' && hoaDon.trangThaiHD.trangThai != '3'}">
+              <input class="form-check-input" type="radio" name="trangThai" id="daNhanHang" value="1" th:checked="${hoaDon.trangThaiHD.trangThai == '1'}">
+              <label class="form-check-label status-daNhanHang" for="daNhanHang">Đã nhận hàng</label>
+            </div>
+
+            <!-- Đã hủy -->
+            <div class="form-check flex-fill">
+              <input class="form-check-input" type="radio" name="trangThai" id="daHuy" value="4" th:checked="${hoaDon.trangThaiHD.trangThai == '4'}">
+              <label class="form-check-label status-daHuy" for="daHuy">Đã hủy</label>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Tổng tiền -->
+        <div class="form-group">
+          <label for="tongTien">Tổng tiền:</label>
+          <input type="text" id="tongTien" class="form-control" th:value="${#numbers.formatDecimal(hoaDon.tongTien, 0, 'COMMA', 2, 'POINT')}" readonly>
+        </div>
+
+        <!-- Buttons -->
+        <div class="text-center">
+          <button type="submit" class="btn btn-custom">Lưu thay đổi</button>
+          <a href="http://localhost:8080/getAll" class="btn btn-secondary">Quay lại</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS and dependencies -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

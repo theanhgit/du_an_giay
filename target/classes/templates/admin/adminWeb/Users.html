@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <th:block th:replace="~{cssImport.html :: layout_import_css}"/>
+</head>
+<body>
+<div th:replace="~{admin/common/Header.html}"></div>
+<div th:replace="~{admin/common/menu.html}"></div>
+<!-- header -->
+<div class="content-wrapper">
+    <section class="content">
+        <div class="main-content">
+            <div class="main-content-inner">
+                <div class="page-content">
+                    <div class="card border-primary mb-3" style="max-width: 90%; margin: auto;">
+                        <div class="card-header">
+                            <h3>Quản lý User</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="product-form">
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label for="trangThai">Trạng Thái</label>
+                                        <div class="input-group">
+                                            <select class="form-control" id="trangThai" name="trangThai" required>
+                                                <option value="1"> Đang Hoat Động  </option>
+                                                <option value="0"> Ngừng Hoạt Động  </option>
+                                            </select>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- Bảng sản phẩm -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                            <tr>
+                                <th>Tài Khoản</th>
+                                <th>Số Điện Thoại </th>
+                                <th>Ngày Tạo</th>
+                                <th>Chọn</th>
+                            </tr>
+                            </thead>
+                            <tbody id="productTable">
+
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- /Bảng sản phẩm -->
+                </div>
+            </div>
+        </div>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center" id="pagination">
+                <!-- Các liên kết phân trang sẽ được thêm vào đây -->
+            </ul>
+        </nav>
+    </section>
+</div>
+<div th:replace="~{admin/common/foodter.html}"></div>
+<th:block th:replace="jsImport.html :: layout_import_js"/>
+</body>
+<script>
+    $(document).ready(function () {
+        let currentPage = 0;
+        let pageSize = 4;
+        let keySearch = 1;
+
+        $('#trangThai').on('change', function () {
+            currentPage = 0;
+            keySearch = $(this).val();
+            loadUsers(currentPage);
+        });
+
+        loadUsers(currentPage);
+
+        function loadUsers(pageNo) {
+            let url2 = `/api/user/all?pageNo=${pageNo}&pageSize=${pageSize}`;
+            if (keySearch) {
+                url2 += `&trangThai=${keySearch}`;
+            }
+            $.ajax({
+                url: url2,
+                type: 'GET',
+                dataType: 'json',
+                success: function (response) {
+                    let products = response.content;
+                    let productTable = $('#productTable');
+                    productTable.empty(); // Xóa các hàng hiện tại
+                    $.each(products, function (index, product) {
+                        let taiKhoan = product.taiKhoan == '' ? "Vãng Lai" : product.taiKhoan;
+                        let trangThai = product.trangThai == '1' ? "Đang Hoạt Động" : "Dừng Hoạt Động";
+                        let buttonHtml = taiKhoan !== "Vãng Lai"
+                            ? `<button class="btn btn-danger product-button-khoa" data-id="${product.id}">Khóa</button>
+                           <button class="btn btn-success product-button-mo" data-id="${product.id}">Mở</button>`
+                            : '';
+                        let row = `<tr>
+                        <td>${taiKhoan}</td>
+                        <td>${product.sdt}</td>
+                        <td>${product.createDate}</td>
+                        <td>${trangThai}</td>
+                        <td>${buttonHtml}</td>
+                    </tr>`;
+                        productTable.append(row);
+                    });
+
+                    // Gọi hàm thêm sự kiện click vào nút "Mở" và "Khóa"
+                    setupButtons();
+                    setupPagination(response);
+                },
+                error: function (error) {
+                    console.log('Error:', error);
+                }
+            });
+        }
+
+        function setupButtons() {
+            // Xử lý sự kiện click cho nút "Khóa"
+            $('.product-button-khoa').on('click', function () {
+                let idUser = $(this).data('id');
+                $.ajax({
+                    url: `/api/user/khoa/${idUser}`,
+                    type: 'PUT',
+                    success: function () {
+                        loadUsers(currentPage); // Tải lại danh sách sau khi cập nhật
+                        alert(" Khóa Thành Công")
+                    },
+                    error: function (error) {
+                        console.log('Error:', error);
+                    }
+                });
+            });
+
+            // Xử lý sự kiện click cho nút "Mở"
+            $('.product-button-mo').on('click', function () {
+                let idUser = $(this).data('id');
+                $.ajax({
+                    url: `/api/user/mo/${idUser}`,
+                    type: 'PUT',
+                    success: function () {
+                        loadUsers(currentPage); // Tải lại danh sách sau khi cập nhật
+                        alert("Mờ Khóa Thành Công")
+                    },
+                    error: function (error) {
+                        console.log('Error:', error);
+                    }
+                });
+            });
+        }
+
+        function setupPagination(response) {
+            let totalPages = response.totalPages;
+            let currentPage = response.number;
+            let pagination = $('#pagination');
+            pagination.empty();
+
+            if (totalPages > 1) {
+                if (currentPage > 0) {
+                    pagination.append(`<li class="page-item"><a class="page-link" href="#" data-page="${currentPage - 1}">Previous</a></li>`);
+                }
+                for (let i = 0; i < totalPages; i++) {
+                    let activeClass = (i === currentPage) ? 'active' : '';
+                    pagination.append(`<li class="page-item ${activeClass}"><a class="page-link" href="#" data-page="${i}">${i + 1}</a></li>`);
+                }
+                if (currentPage < totalPages - 1) {
+                    pagination.append(`<li class="page-item"><a class="page-link" href="#" data-page="${currentPage + 1}">Next</a></li>`);
+                }
+            }
+
+            $('.page-link').on('click', function (event) {
+                event.preventDefault();
+                let page = $(this).data('page');
+                loadUsers(page);
+            });
+        }
+    });
+</script>
+</html>
